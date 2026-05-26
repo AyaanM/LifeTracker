@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { MonthData, BudgetItem, ExpenseEntry } from '../types';
-import { MONTHS, getNetIncome, EXPENSE_CATEGORIES, LOG_TRACKED_IDS, getMonthIndexFromDate } from '../constants/data';
+import { MONTHS, EXPENSE_CATEGORIES, LOG_TRACKED_IDS, getMonthIndexFromDate } from '../constants/data';
 import { formatCAD } from '../utils/formatters';
 import { Plus, Trash2, ChevronDown, Receipt } from 'lucide-react';
 
@@ -29,7 +29,15 @@ export default function MonthlyBudget({ monthlyData, setMonthlyData, expenses }:
   const [addingItem, setAddingItem] = useState(false);
 
   const monthData = monthlyData[selectedMonth];
-  const netIncome = getNetIncome(selectedMonth);
+  const netIncome = monthData?.netIncome ?? 0;
+
+  function updateNetIncome(value: string) {
+    const num = value === '' ? 0 : parseFloat(value);
+    if (isNaN(num)) return;
+    setMonthlyData(prev => prev.map(md =>
+      md.monthIndex === selectedMonth ? { ...md, netIncome: num } : md
+    ));
+  }
 
   // Resolve actual for each item: log-tracked → computed, others → stored manual value
   function resolveActual(item: BudgetItem): number {
@@ -160,7 +168,17 @@ export default function MonthlyBudget({ monthlyData, setMonthlyData, expenses }:
           <span className="dot">·</span>
           <span>{MONTHS[selectedMonth].name}</span>
         </div>
-        <div className="budget-income-badge">Net Income: {formatCAD(netIncome)}</div>
+        <div className="budget-income-badge">
+          <span>Net Income:</span>
+          <span className="input-prefix">$</span>
+          <input
+            type="number"
+            value={netIncome || ''}
+            onChange={e => updateNetIncome(e.target.value)}
+            className="amount-input income-inline-input"
+            placeholder="0.00"
+          />
+        </div>
       </div>
 
       {/* Budget table */}
@@ -238,11 +256,9 @@ export default function MonthlyBudget({ monthlyData, setMonthlyData, expenses }:
                       )}
                     </div>
                     <div className="col-actions">
-                      {!item.locked && (
-                        <button onClick={() => deleteItem(item.id)} className="icon-btn icon-btn--cancel">
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                      <button onClick={() => deleteItem(item.id)} className="icon-btn icon-btn--cancel">
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 );

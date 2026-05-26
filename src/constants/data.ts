@@ -1,4 +1,4 @@
-import type { AccountBalances, BudgetItem, MonthData } from '../types';
+import type { AccountBalances, MonthData } from '../types';
 
 export const DATA_VERSION = 3;
 
@@ -45,18 +45,6 @@ export function getMonthIndexFromDate(dateStr: string): number {
   return MONTH_RANGES.findIndex(r => dateStr >= r.start && dateStr <= r.end);
 }
 
-export const SALARY_PHASES = [
-  { months: [0, 1, 2, 3], rate: 34, gross: 5100, net: 4850 },
-  { months: [4, 5, 6, 7], rate: 35.5, gross: 5325, net: 5075 },
-  { months: [8, 9, 10, 11], rate: 37, gross: 5550, net: 5300 },
-  { months: [12, 13, 14, 15], rate: 38.5, gross: 5775, net: 5525 },
-];
-
-export function getNetIncome(monthIndex: number): number {
-  const phase = SALARY_PHASES.find(p => p.months.includes(monthIndex));
-  return phase?.net ?? 4850;
-}
-
 export const DEFAULT_BALANCES: AccountBalances = {
   debit: 0,
   savings: 0,
@@ -81,61 +69,19 @@ export const EXPENSE_CATEGORIES: { label: string; budgetItemId: string | null }[
 // Budget item IDs whose "actual" is computed from the expense log (not manual)
 export const LOG_TRACKED_IDS = new Set(['rent', 'utilities', 'transit', 'calgary', 'groceries', 'misc']);
 
-function makeFixedItems(monthIndex: number): BudgetItem[] {
-  const investmentContrib = monthIndex <= 1 ? 100 : 200;
-  return [
-    { id: 'rent',      name: 'Rent',              budgeted: 1380,             actual: 0, category: 'fixed',   locked: true },
-    { id: 'utilities', name: 'Utilities',          budgeted: 70,               actual: 0, category: 'fixed',   locked: true },
-    { id: 'transit',   name: 'Transit',            budgeted: 100,              actual: 0, category: 'fixed',   locked: true },
-    { id: 'calgary',   name: 'Calgary Trip',       budgeted: 100,              actual: 0, category: 'fixed',   locked: true },
-    { id: 'groceries', name: 'Groceries',          budgeted: 200,              actual: 0, category: 'fixed',   locked: true },
-    { id: 'misc',      name: 'Miscellaneous',      budgeted: 200,              actual: 0, category: 'fixed',   locked: true },
-    { id: 'rrsp',      name: 'RRSP Contribution',  budgeted: investmentContrib, actual: 0, category: 'savings', locked: true },
-    { id: 'tfsa',      name: 'TFSA Contribution',  budgeted: investmentContrib, actual: 0, category: 'savings', locked: true },
-  ];
-}
-
-function buildMonthItems(monthIndex: number): BudgetItem[] {
-  const items = makeFixedItems(monthIndex);
-
-  if (monthIndex <= 2) {
-    items.push({ id: 'nyc-savings', name: 'NYC Trip Savings', budgeted: 500, actual: 0, category: 'savings', locked: true });
-  }
-  if (monthIndex === 0) {
-    // Credit card payoff removed — paid from existing debit balance, not May income
-    items.push({ id: 'learn-row',  name: 'Learn to Row',       budgeted: 304.75, actual: 0, category: 'one-time', locked: true });
-  }
-  if (monthIndex === 2) {
-    items.push({ id: 'rowing-membership', name: 'Rowing Membership', budgeted: 625,  actual: 0, category: 'one-time', locked: true });
-  }
-  if (monthIndex === 3) {
-    items.push({ id: 'nyc-trip', name: 'NYC Trip', budgeted: 1500, actual: 0, category: 'one-time', locked: true });
-  }
-
-  return items;
-}
-
 export function buildDefaultMonthlyData(): MonthData[] {
   return MONTHS.map(m => ({
     monthIndex: m.index,
-    items: buildMonthItems(m.index),
+    netIncome: 0,
+    items: [],
   }));
 }
 
-// IDs that should never appear in the budget (paid from existing balances, not income)
-const REMOVED_ITEM_IDS = new Set(['cc-payoff']);
-
-// Migration: bring stored monthlyData up to the current DATA_VERSION
+// Migration: ensure shape is correct, never inject hardcoded data
 export function migrateMonthlyData(stored: MonthData[]): MonthData[] {
-  return stored.map(md => {
-    const defaults = buildMonthItems(md.monthIndex);
-    const merged = defaults.map(def => {
-      const existing = md.items.find(i => i.id === def.id);
-      if (!existing) return def;
-      return { ...existing, budgeted: def.budgeted };
-    });
-    const customItems = md.items.filter(i => !i.locked && !REMOVED_ITEM_IDS.has(i.id));
-    const filteredMerged = merged.filter(i => !REMOVED_ITEM_IDS.has(i.id));
-    return { ...md, items: [...filteredMerged, ...customItems] };
-  });
+  return stored.map(md => ({
+    ...md,
+    netIncome: md.netIncome ?? 0,
+    items: md.items ?? [],
+  }));
 }

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { NavSection } from './types';
-import { useCloudData } from './hooks/useCloudData';
+import { useCloudData, generateSyncCode } from './hooks/useCloudData';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import SyncSetup from './components/SyncSetup';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import MonthlyBudget from './components/MonthlyBudget';
@@ -12,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<NavSection>('dashboard');
-  const [syncCode, setSyncCode] = useLocalStorage<string>('tbf-sync-code', '');
+  const [syncCode] = useLocalStorage<string>('tbf-sync-code', generateSyncCode());
 
   const {
     syncStatus,
@@ -24,14 +23,6 @@ export default function App() {
     setExpenses,
     refresh,
   } = useCloudData(syncCode);
-
-  if (!syncCode) {
-    return (
-      <SyncSetup
-        onComplete={code => setSyncCode(code)}
-      />
-    );
-  }
 
   if (syncStatus === 'loading') {
     return (
@@ -55,7 +46,6 @@ export default function App() {
           setMonthlyData={setMonthlyData}
           expenses={expenses}
           setExpenses={setExpenses}
-          syncCode={syncCode}
           syncStatus={syncStatus}
           onRefresh={refresh}
         />

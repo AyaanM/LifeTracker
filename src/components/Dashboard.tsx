@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import type { AccountBalances, MonthData, ExpenseEntry } from '../types';
-import { MONTHS, SALARY_PHASES, getNetIncome } from '../constants/data';
+import { MONTHS } from '../constants/data';
 import { formatCAD } from '../utils/formatters';
-import { Pencil, Check, X, AlertCircle, TrendingUp, Download, Upload, Copy, RefreshCw } from 'lucide-react';
+import { Pencil, Check, X, AlertCircle, TrendingUp, Download, Upload, RefreshCw } from 'lucide-react';
 import type { SyncStatus } from '../hooks/useCloudData';
 
 interface Props {
@@ -12,7 +12,6 @@ interface Props {
   setMonthlyData: (d: MonthData[] | ((prev: MonthData[]) => MonthData[])) => void;
   expenses: ExpenseEntry[];
   setExpenses: (e: ExpenseEntry[] | ((prev: ExpenseEntry[]) => ExpenseEntry[])) => void;
-  syncCode: string;
   syncStatus: SyncStatus;
   onRefresh: () => void;
 }
@@ -21,32 +20,24 @@ const CURRENT_MONTH_INDEX = 0;
 
 type EditableAccount = keyof AccountBalances;
 
-export default function Dashboard({ balances, setBalances, monthlyData, setMonthlyData, expenses, setExpenses, syncCode, syncStatus, onRefresh }: Props) {
+export default function Dashboard({ balances, setBalances, monthlyData, setMonthlyData, expenses, setExpenses, syncStatus, onRefresh }: Props) {
   const [editing, setEditing] = useState<EditableAccount | null>(null);
   const [editValue, setEditValue] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function copySyncCode() {
-    navigator.clipboard.writeText(syncCode).then(() => {
-      setCodeCopied(true);
-      setTimeout(() => setCodeCopied(false), 2000);
-    });
-  }
-
   const totalNetWorth = Object.values(balances).reduce((a, b) => a + b, 0);
-  const netIncome = getNetIncome(CURRENT_MONTH_INDEX);
-
   const currentMonthData = monthlyData[CURRENT_MONTH_INDEX];
+  const netIncome = currentMonthData?.netIncome ?? 0;
+
   const totalActualExpenses = currentMonthData?.items.reduce((s, i) => s + (i.actual || 0), 0) ?? 0;
   const remainingBudget = netIncome - totalActualExpenses;
 
   let cumulativeSavings = 0;
   for (let i = 0; i < MONTHS.length; i++) {
     const md = monthlyData[i];
-    const income = getNetIncome(i);
+    const income = md?.netIncome ?? 0;
     const actual = md?.items.reduce((s, item) => s + (item.actual || 0), 0) ?? 0;
     if (actual > 0) cumulativeSavings += income - actual;
   }
@@ -54,7 +45,7 @@ export default function Dashboard({ balances, setBalances, monthlyData, setMonth
   let projectedSavings = 0;
   for (let i = 0; i < MONTHS.length; i++) {
     const md = monthlyData[i];
-    const income = getNetIncome(i);
+    const income = md?.netIncome ?? 0;
     const budgeted = md?.items.reduce((s, item) => s + item.budgeted, 0) ?? 0;
     projectedSavings += income - budgeted;
   }
@@ -139,7 +130,6 @@ export default function Dashboard({ balances, setBalances, monthlyData, setMonth
     wealthsimple: 'Wealthsimple',
   };
 
-  const currentPhase = SALARY_PHASES.find(p => p.months.includes(CURRENT_MONTH_INDEX));
   const currentMonthName = MONTHS[CURRENT_MONTH_INDEX].name;
 
   return (
@@ -147,7 +137,7 @@ export default function Dashboard({ balances, setBalances, monthlyData, setMonth
       <div className="section-header">
         <div>
           <h1 className="section-title">Dashboard</h1>
-          <p className="section-subtitle">Month 1 of 16 · {currentMonthName} · ${currentPhase?.rate}/hr</p>
+          <p className="section-subtitle">Month 1 of 16 · {currentMonthName}</p>
         </div>
       </div>
 
@@ -169,7 +159,7 @@ export default function Dashboard({ balances, setBalances, monthlyData, setMonth
         <div className="stat-card stat-card--primary">
           <div className="stat-label">Monthly Net Income</div>
           <div className="stat-value">{formatCAD(netIncome)}</div>
-          <div className="stat-sub">Phase {SALARY_PHASES.findIndex(p => p.months.includes(CURRENT_MONTH_INDEX)) + 1}</div>
+          <div className="stat-sub">Edit in Monthly Budget</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Remaining Budget</div>
@@ -273,22 +263,6 @@ export default function Dashboard({ balances, setBalances, monthlyData, setMonth
             {syncStatus === 'saving' ? 'Saving…' : syncStatus === 'error' ? 'Offline' : 'Synced'}
           </span>
         </div>
-        <p className="sync-description">
-          Your data is stored in the cloud. Open this app on any device and enter your sync code to access the same data.
-        </p>
-
-        <div className="sync-code-block">
-          <span className="sync-code-label">Your sync code</span>
-          <div className="sync-code-row">
-            <span className="sync-code-value">{syncCode}</span>
-            <button className="btn btn-ghost btn-sm sync-copy-btn" onClick={copySyncCode}>
-              <Copy size={14} />
-              <span>{codeCopied ? 'Copied!' : 'Copy'}</span>
-            </button>
-          </div>
-          <span className="sync-code-hint">Enter this on another device when prompted at first launch.</span>
-        </div>
-
         <div className="sync-actions">
           <button onClick={onRefresh} className="btn btn-ghost">
             <RefreshCw size={16} />

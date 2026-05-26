@@ -1,5 +1,5 @@
 import type { AccountBalances, MonthData, ExpenseEntry } from '../types';
-import { MONTHS, getNetIncome, EXPENSE_CATEGORIES, LOG_TRACKED_IDS, getMonthIndexFromDate } from '../constants/data';
+import { MONTHS, EXPENSE_CATEGORIES, LOG_TRACKED_IDS, getMonthIndexFromDate } from '../constants/data';
 import { formatCAD } from '../utils/formatters';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -44,7 +44,7 @@ export default function SavingsProjection({ balances, monthlyData, expenses }: P
 
   for (let i = 0; i < MONTHS.length; i++) {
     const md = monthlyData[i];
-    const netIncome = getNetIncome(i);
+    const netIncome = md?.netIncome ?? 0;
     const totalBudgeted = md?.items.reduce((s, item) => s + item.budgeted, 0) ?? 0;
     const totalActual = md?.items.reduce((s, item) => {
       if (LOG_TRACKED_IDS.has(item.id)) {

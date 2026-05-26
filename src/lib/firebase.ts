@@ -2,12 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAPL1_H_Riku1xSMfF2vMLrSKa6ctLELTQ",
+  authDomain: "lifetracker-7b752.firebaseapp.com",
+  databaseURL: "https://lifetracker-7b752-default-rtdb.firebaseio.com",
+  projectId: "lifetracker-7b752",
+  storageBucket: "lifetracker-7b752.firebasestorage.app",
+  messagingSenderId: "882858925842",
+  appId: "1:882858925842:web:4738a3b52ce68484ad5dcb",
 };
 
 const app = initializeApp(firebaseConfig);

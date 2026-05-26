@@ -17,6 +17,7 @@ export interface BudgetItem {
 
 export interface MonthData {
   monthIndex: number;
+  netIncome: number;
   items: BudgetItem[];
 }
 
