@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import type { AccountBalances, MonthData, ExpenseEntry } from '../types';
+import type { AccountBalances, MonthData } from '../types';
 import { DEFAULT_BALANCES, buildDefaultMonthlyData, migrateMonthlyData, DATA_VERSION } from '../constants/data';
 
 interface CloudPayload {
   balances: AccountBalances;
   monthlyData: MonthData[];
-  expenses: ExpenseEntry[];
+  monthlyIncome: number;
   version: number;
   updatedAt: number;
 }
@@ -20,13 +20,13 @@ export type SyncStatus = 'loading' | 'idle' | 'saving' | 'error';
 export function useCloudData(syncCode: string) {
   const [balances, setBalancesState] = useState<AccountBalances>(DEFAULT_BALANCES);
   const [monthlyData, setMonthlyDataState] = useState<MonthData[]>(buildDefaultMonthlyData());
-  const [expenses, setExpensesState] = useState<ExpenseEntry[]>([]);
+  const [monthlyIncome, setMonthlyIncomeState] = useState<number>(0);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
 
   const latestRef = useRef<CloudPayload>({
     balances,
     monthlyData,
-    expenses,
+    monthlyIncome: 0,
     version: DATA_VERSION,
     updatedAt: 0,
   });
@@ -67,10 +67,10 @@ export function useCloudData(syncCode: string) {
     });
   }, [scheduleSave]);
 
-  const setExpenses = useCallback((value: ExpenseEntry[] | ((prev: ExpenseEntry[]) => ExpenseEntry[])) => {
-    setExpensesState(prev => {
+  const setMonthlyIncome = useCallback((value: number | ((prev: number) => number)) => {
+    setMonthlyIncomeState(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      latestRef.current = { ...latestRef.current, expenses: next, updatedAt: Date.now() };
+      latestRef.current = { ...latestRef.current, monthlyIncome: next, updatedAt: Date.now() };
       scheduleSave();
       return next;
     });
@@ -83,15 +83,15 @@ export function useCloudData(syncCode: string) {
       if (snap.exists()) {
         const data = snap.data() as CloudPayload;
         const migrated = migrateMonthlyData(data.monthlyData ?? buildDefaultMonthlyData());
-        const b = data.balances ?? DEFAULT_BALANCES;
-        const e = data.expenses ?? [];
+        const b = { ...DEFAULT_BALANCES, ...data.balances };
+        const income = data.monthlyIncome ?? 0;
         setBalancesState(b);
         setMonthlyDataState(migrated);
-        setExpensesState(e);
+        setMonthlyIncomeState(income);
         latestRef.current = {
           balances: b,
           monthlyData: migrated,
-          expenses: e,
+          monthlyIncome: income,
           version: DATA_VERSION,
           updatedAt: data.updatedAt ?? 0,
         };
@@ -116,8 +116,8 @@ export function useCloudData(syncCode: string) {
     setBalances,
     monthlyData,
     setMonthlyData,
-    expenses,
-    setExpenses,
+    monthlyIncome,
+    setMonthlyIncome,
     refresh: loadFromCloud,
   };
 }
@@ -126,18 +126,4 @@ export function generateSyncCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   return `${seg()}-${seg()}-${seg()}`;
-}
-
-export async function createNewSyncDoc(syncCode: string, payload: Omit<CloudPayload, 'version' | 'updatedAt'>) {
-  const docRef = doc(db, COLLECTION, syncCode);
-  await setDoc(docRef, {
-    ...payload,
-    version: DATA_VERSION,
-    updatedAt: Date.now(),
-  });
-}
-
-export async function syncCodeExists(syncCode: string): Promise<boolean> {
-  const snap = await getDoc(doc(db, COLLECTION, syncCode));
-  return snap.exists();
 }

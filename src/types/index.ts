@@ -1,32 +1,23 @@
 export interface AccountBalances {
   debit: number;
-  savings: number;
+  expenses: number;
   tfsa: number;
-  rrsp: number;
-  wealthsimple: number;
+  fhsa: number;
+  studentLoans: number;
 }
 
 export interface BudgetItem {
   id: string;
   name: string;
+  kind: 'income' | 'expense';
+  category: string;
   budgeted: number;
   actual: number;
-  category: 'fixed' | 'savings' | 'one-time' | 'custom';
-  locked: boolean;
 }
 
 export interface MonthData {
   monthIndex: number;
-  netIncome: number;
   items: BudgetItem[];
 }
 
-export interface ExpenseEntry {
-  id: string;
-  date: string;
-  category: string;
-  description: string;
-  amount: number;
-}
-
-export type NavSection = 'dashboard' | 'budget' | 'expenses' | 'savings';
+export type NavSection = 'dashboard' | 'budget';

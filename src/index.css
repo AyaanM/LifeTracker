@@ -1230,3 +1230,140 @@ body {
 /* spin utility used for loaders */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
+
+/* ── Annual Tiles ──────────────────────────────────────── */
+.annual-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 640px) { .annual-tiles { grid-template-columns: 1fr; } }
+
+.annual-tile {
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.annual-tile--income   { background: #D1FAE5; }
+.annual-tile--expenses { background: #FEE2E2; }
+.annual-tile--net-pos  { background: #DBEAFE; }
+.annual-tile--net-neg  { background: #FEE2E2; }
+
+.annual-tile-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.65; }
+.annual-tile-value { font-size: 1.7rem; font-weight: 700; color: var(--text-1); line-height: 1.1; }
+.annual-tile-sub   { font-size: 0.78rem; color: var(--text-3); margin-top: 0.1rem; }
+
+/* ── Category Badge ────────────────────────────────────── */
+.cat-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.budget-item-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+/* ── Section group headers ─────────────────────────────── */
+.badge-income-header {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #065F46; background: #D1FAE5;
+  padding: 2px 10px; border-radius: 99px;
+}
+.badge-expense-header {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #991B1B; background: #FEE2E2;
+  padding: 2px 10px; border-radius: 99px;
+}
+
+/* ── Add Item Form ─────────────────────────────────────── */
+.add-item-form {
+  border-top: 1px dashed var(--border);
+  padding: 1rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.add-item-kind-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+.kind-btn {
+  flex: 1;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-2);
+  transition: all 0.15s;
+}
+.kind-btn--active.kind-btn--expense { background: #FEE2E2; border-color: #EF4444; color: #991B1B; }
+.kind-btn--active.kind-btn--income  { background: #D1FAE5; border-color: #22C55E; color: #065F46; }
+
+.add-item-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.cat-chip {
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-2);
+  transition: all 0.12s;
+}
+.cat-chip:hover { border-color: var(--primary); color: var(--primary); }
+.cat-chip--active { font-weight: 700; }
+
+.add-item-fields {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.add-item-fields .add-name-input { flex: 1; min-width: 140px; }
+
+.add-item-actions { display: flex; gap: 0.5rem; }
+
+/* ── Income edit row ───────────────────────────────────── */
+.income-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.income-prefix { font-size: 1.1rem; font-weight: 700; color: var(--text-2); }
+.income-edit-input {
+  width: 160px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  outline: none;
+  background: var(--bg);
+}
+.income-edit-input:focus { border-color: var(--primary); }
+.income-annual { font-size: 0.85rem; color: var(--text-3); margin-left: 0.25rem; }
+
+/* ── Clear confirm ─────────────────────────────────────── */
+.clear-confirm { display: flex; align-items: center; gap: 0.5rem; }
+.clear-confirm-text { font-size: 0.85rem; color: var(--text-2); }
+.btn-danger {
+  background: #EF4444; color: #fff; border: none;
+  border-radius: 6px; padding: 4px 12px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer;
+}
+.btn-danger:hover { background: #DC2626; }

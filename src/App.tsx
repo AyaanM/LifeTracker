@@ -5,8 +5,6 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import MonthlyBudget from './components/MonthlyBudget';
-import ExpenseLog from './components/ExpenseLog';
-import SavingsProjection from './components/SavingsProjection';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
@@ -19,8 +17,8 @@ export default function App() {
     setBalances,
     monthlyData,
     setMonthlyData,
-    expenses,
-    setExpenses,
+    monthlyIncome,
+    setMonthlyIncome,
     refresh,
   } = useCloudData(syncCode);
 
@@ -34,30 +32,24 @@ export default function App() {
   }
 
   return (
-    <Layout
-      activeSection={activeSection}
-      onNavigate={setActiveSection}
-    >
+    <Layout activeSection={activeSection} onNavigate={setActiveSection}>
       {activeSection === 'dashboard' && (
         <Dashboard
           balances={balances}
           setBalances={setBalances}
           monthlyData={monthlyData}
-          setMonthlyData={setMonthlyData}
-          expenses={expenses}
-          setExpenses={setExpenses}
+          monthlyIncome={monthlyIncome}
           syncStatus={syncStatus}
           onRefresh={refresh}
         />
       )}
       {activeSection === 'budget' && (
-        <MonthlyBudget monthlyData={monthlyData} setMonthlyData={setMonthlyData} expenses={expenses} />
-      )}
-      {activeSection === 'expenses' && (
-        <ExpenseLog expenses={expenses} setExpenses={setExpenses} />
-      )}
-      {activeSection === 'savings' && (
-        <SavingsProjection balances={balances} monthlyData={monthlyData} expenses={expenses} />
+        <MonthlyBudget
+          monthlyData={monthlyData}
+          setMonthlyData={setMonthlyData}
+          monthlyIncome={monthlyIncome}
+          setMonthlyIncome={setMonthlyIncome}
+        />
       )}
     </Layout>
   );
