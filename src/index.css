@@ -1231,30 +1231,140 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
 
-/* ── Annual Tiles ──────────────────────────────────────── */
-.annual-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+/* ── Hero Month Card ───────────────────────────────────── */
+.hero-month-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.hero-month-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
   margin-bottom: 1rem;
 }
-@media (max-width: 640px) { .annual-tiles { grid-template-columns: 1fr; } }
+.hero-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6rem;
+}
+@media (max-width: 860px) { .hero-tiles { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .hero-tiles { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 360px) { .hero-tiles { grid-template-columns: 1fr; } }
 
-.annual-tile {
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
+.hero-tile {
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.1rem;
 }
-.annual-tile--income   { background: #D1FAE5; }
-.annual-tile--expenses { background: #FEE2E2; }
-.annual-tile--net-pos  { background: #DBEAFE; }
-.annual-tile--net-neg  { background: #FEE2E2; }
+.hero-tile--income      { background: #D1FAE5; }
+.hero-tile--dasond      { background: #FEF3C7; }
+.hero-tile--expenses    { background: #FEE2E2; }
+.hero-tile--surplus-pos { background: #DBEAFE; }
+.hero-tile--surplus-neg { background: #FEE2E2; }
 
-.annual-tile-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.65; }
-.annual-tile-value { font-size: 1.7rem; font-weight: 700; color: var(--text-1); line-height: 1.1; }
-.annual-tile-sub   { font-size: 0.78rem; color: var(--text-3); margin-top: 0.1rem; }
+.hero-tile-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; }
+.hero-tile-value { font-size: 1.2rem; font-weight: 800; color: var(--text-1); line-height: 1.15; }
+.hero-tile-sub   { font-size: 0.67rem; color: var(--text-3); margin-top: 0.05rem; }
+
+/* ── Hero tile: after dasond ───────────────────────────── */
+.hero-tile--after { background: #EDE9FE; }
+
+/* ── Annual strip ──────────────────────────────────────── */
+.annual-strip {
+  display: flex;
+  align-items: stretch;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.annual-strip-item {
+  flex: 1;
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.annual-strip-divider { width: 1px; background: var(--border); flex-shrink: 0; }
+.annual-strip-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); }
+.annual-strip-value { font-size: 1.05rem; font-weight: 700; color: var(--text-1); }
+.annual-strip-sub   { font-size: 0.68rem; color: var(--text-3); }
+@media (max-width: 500px) { .annual-strip { flex-direction: column; } .annual-strip-divider { width: auto; height: 1px; } }
+
+/* ── Savings Goals ─────────────────────────────────────── */
+.goals-list { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.25rem; }
+.goal-row { display: flex; flex-direction: column; gap: 0.35rem; }
+.goal-header { display: flex; align-items: center; justify-content: space-between; }
+.goal-top-row { display: flex; align-items: center; gap: 0.4rem; }
+.goal-amounts-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: 0.85rem; }
+.goal-field-label { font-size: 0.72rem; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.goal-name { font-size: 0.9rem; font-weight: 600; color: var(--text-1); flex: 1; }
+
+.goal-progress-bar {
+  height: 7px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6B8F5E, #4ade80);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.goal-amounts { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; }
+.goal-amount-btn {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+  border-radius: 4px; color: var(--text-1);
+}
+.goal-amount-btn:hover { background: var(--border); }
+.goal-amount-val { font-weight: 600; font-size: 0.85rem; }
+.goal-pencil { color: var(--text-3); }
+.goal-target .goal-amount-val { color: var(--text-2); }
+.goal-sep { color: var(--text-3); font-size: 0.78rem; }
+.goal-pct { margin-left: auto; font-size: 0.75rem; font-weight: 700; color: #6B8F5E; }
+
+.goal-target-val { color: var(--text-2); }
+.goal-edit-inline { display: flex; align-items: center; gap: 0.25rem; }
+.goal-edit-input {
+  width: 90px; border: 1px solid var(--border); border-radius: 5px;
+  padding: 3px 7px; font-size: 0.82rem; outline: none; background: var(--bg);
+}
+.goal-edit-input:focus { border-color: var(--primary); }
+
+.add-goal-form {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);
+}
+
+/* ── Add account form ──────────────────────────────────── */
+.add-account-form {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);
+}
+
+/* ── Small add button (header) ─────────────────────────── */
+.btn-add-small {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-size: 0.78rem; font-weight: 600;
+  color: var(--text-2); cursor: pointer;
+}
+.btn-add-small:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ── Empty state hint ──────────────────────────────────── */
+.empty-hint { font-size: 0.82rem; color: var(--text-3); padding: 0.25rem 0 0.5rem; }
 
 /* ── Category Badge ────────────────────────────────────── */
 .cat-badge {
@@ -1357,6 +1467,9 @@ body {
 }
 .income-edit-input:focus { border-color: var(--primary); }
 .income-annual { font-size: 0.85rem; color: var(--text-3); margin-left: 0.25rem; }
+.income-display { font-size: 1.2rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.income-edit-expanded { display: flex; flex-direction: column; gap: 0.65rem; }
+.income-apply-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 /* ── Clear confirm ─────────────────────────────────────── */
 .clear-confirm { display: flex; align-items: center; gap: 0.5rem; }

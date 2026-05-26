@@ -1,196 +1,290 @@
 import { useState, useRef } from 'react';
-import type { AccountBalances, MonthData } from '../types';
+import type { Account, SavingsGoal, MonthData } from '../types';
 import { MONTHS } from '../constants/data';
 import { formatCAD } from '../utils/formatters';
-import { Pencil, Check, X, Download, Upload, RefreshCw } from 'lucide-react';
+import { Pencil, Check, X, Download, Upload, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import type { SyncStatus } from '../hooks/useCloudData';
 
 interface Props {
-  balances: AccountBalances;
-  setBalances: (b: AccountBalances | ((prev: AccountBalances) => AccountBalances)) => void;
+  accounts: Account[];
+  setAccounts: (v: Account[] | ((p: Account[]) => Account[])) => void;
+  savingsGoals: SavingsGoal[];
+  setSavingsGoals: (v: SavingsGoal[] | ((p: SavingsGoal[]) => SavingsGoal[])) => void;
   monthlyData: MonthData[];
-  monthlyIncome: number;
   syncStatus: SyncStatus;
   onRefresh: () => void;
 }
 
-const CURRENT_MONTH_INDEX = new Date().getMonth();
+const CURRENT = new Date().getMonth();
 
-type EditableAccount = keyof AccountBalances;
+export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData, syncStatus, onRefresh }: Props) {
+  // Account editing
+  const [editAccId, setEditAccId]   = useState<string | null>(null);
+  const [editAccVal, setEditAccVal] = useState('');
+  const [addingAcc, setAddingAcc]   = useState(false);
+  const [newAccName, setNewAccName] = useState('');
 
-const ACCOUNT_LABELS: Record<EditableAccount, string> = {
-  debit:        'Chequing / Debit',
-  expenses:     'Expenses',
-  tfsa:         'TFSA',
-  fhsa:         'FHSA',
-  studentLoans: 'Student Loans',
-};
+  // Goal editing
+  const [editGoalId, setEditGoalId]       = useState<string | null>(null);
+  const [editGoalField, setEditGoalField] = useState<'current' | 'target'>('current');
+  const [editGoalVal, setEditGoalVal]     = useState('');
+  const [addingGoal, setAddingGoal]       = useState(false);
+  const [newGoalName, setNewGoalName]     = useState('');
+  const [newGoalTarget, setNewGoalTarget] = useState('');
 
-export default function Dashboard({ balances, setBalances, monthlyData, monthlyIncome, syncStatus, onRefresh }: Props) {
-  const [editing, setEditing] = useState<EditableAccount | null>(null);
-  const [editValue, setEditValue] = useState('');
-  const [importError, setImportError] = useState('');
+  // Sync
+  const [importError, setImportError]     = useState('');
   const [importSuccess, setImportSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const currentMonthData = monthlyData[CURRENT_MONTH_INDEX];
-  const currentMonthName = MONTHS[CURRENT_MONTH_INDEX]?.name ?? '';
+  const cur = monthlyData[CURRENT];
+  const monthName = MONTHS[CURRENT]?.name ?? '';
 
-  // Current month stats
-  const currentExpenses = currentMonthData?.items
-    .filter(i => i.kind === 'expense')
-    .reduce((s, i) => s + i.actual, 0) ?? 0;
-  const currentIncomeBonuses = currentMonthData?.items
-    .filter(i => i.kind === 'income')
-    .reduce((s, i) => s + i.actual, 0) ?? 0;
-  const currentSurplus = monthlyIncome + currentIncomeBonuses - currentExpenses;
+  const income    = cur?.monthlyIncome ?? 0;
+  const bonuses   = cur?.items.filter(i => i.kind === 'income').reduce((s, i) => s + i.actual, 0) ?? 0;
+  const totalInc  = income + bonuses;
+  const dasond    = income * 0.125;
+  const afterDas  = totalInc - dasond;
+  const expenses  = cur?.items.filter(i => i.kind === 'expense').reduce((s, i) => s + i.actual, 0) ?? 0;
+  const surplus   = afterDas - expenses;
 
-  // Annual stats
-  const annualIncome = monthlyIncome * 12;
-  const annualExpenses = monthlyData.reduce((total, md) => {
-    return total + md.items.filter(i => i.kind === 'expense').reduce((s, i) => s + i.actual, 0);
-  }, 0);
-  const annualBudgetedExpenses = monthlyData.reduce((total, md) => {
-    return total + md.items.filter(i => i.kind === 'expense').reduce((s, i) => s + i.budgeted, 0);
-  }, 0);
-  const netThisYear = annualIncome - annualExpenses;
+  const annualInc = monthlyData.reduce((s, m) => s + (m.monthlyIncome ?? 0), 0);
+  const annualExp = monthlyData.reduce((s, m) => s + m.items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.actual, 0), 0);
+  const annualBud = monthlyData.reduce((s, m) => s + m.items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.budgeted, 0), 0);
 
-  function startEdit(key: EditableAccount) {
-    setEditing(key);
-    setEditValue(balances[key].toString());
-  }
+  // ── Accounts ────────────────────────────────────────────
+  const startEditAcc = (id: string, amt: number) => { setEditAccId(id); setEditAccVal(amt.toString()); };
+  const saveEditAcc  = () => {
+    const v = parseFloat(editAccVal);
+    if (!isNaN(v) && editAccId) setAccounts(p => p.map(a => a.id === editAccId ? { ...a, amount: v } : a));
+    setEditAccId(null);
+  };
+  const addAccount = () => {
+    if (!newAccName.trim()) return;
+    setAccounts(p => [...p, { id: `acc-${Date.now()}`, name: newAccName.trim(), amount: 0 }]);
+    setNewAccName(''); setAddingAcc(false);
+  };
 
-  function saveEdit() {
-    if (editing) {
-      const val = parseFloat(editValue);
-      if (!isNaN(val)) setBalances(prev => ({ ...prev, [editing]: val }));
-      setEditing(null);
-    }
-  }
+  // ── Goals ────────────────────────────────────────────────
+  const startEditGoal = (id: string, field: 'current' | 'target', val: number) => {
+    setEditGoalId(id); setEditGoalField(field); setEditGoalVal(val.toString());
+  };
+  const saveEditGoal = () => {
+    const v = parseFloat(editGoalVal);
+    if (!isNaN(v) && editGoalId)
+      setSavingsGoals(p => p.map(g => g.id === editGoalId ? { ...g, [editGoalField]: v } : g));
+    setEditGoalId(null);
+  };
+  const addGoal = () => {
+    if (!newGoalName.trim()) return;
+    setSavingsGoals(p => [...p, { id: `goal-${Date.now()}`, name: newGoalName.trim(), target: parseFloat(newGoalTarget) || 0, current: 0 }]);
+    setNewGoalName(''); setNewGoalTarget(''); setAddingGoal(false);
+  };
 
-  function cancelEdit() { setEditing(null); setEditValue(''); }
-
-  function exportData() {
-    const payload = { exportedAt: new Date().toISOString(), balances, monthlyData };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  // ── Export / Import ──────────────────────────────────────
+  const exportData = () => {
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), accounts, savingsGoals, monthlyData }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `blueprint-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
+    const a = document.createElement('a'); a.href = url;
+    a.download = `blueprint-${new Date().toISOString().split('T')[0]}.json`; a.click();
     URL.revokeObjectURL(url);
-  }
-
-  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+  };
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImportError(''); setImportSuccess(false);
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       try {
-        const data = JSON.parse(ev.target?.result as string);
-        if (!data.balances) { setImportError('Invalid file.'); return; }
-        setBalances(data.balances);
-        setImportSuccess(true);
-        setTimeout(() => setImportSuccess(false), 3000);
+        const d = JSON.parse(ev.target?.result as string);
+        if (d.accounts) setAccounts(d.accounts);
+        if (d.savingsGoals) setSavingsGoals(d.savingsGoals);
+        setImportSuccess(true); setTimeout(() => setImportSuccess(false), 3000);
       } catch { setImportError('Could not parse file.'); }
     };
-    reader.readAsText(file);
-    e.target.value = '';
-  }
+    reader.readAsText(file); e.target.value = '';
+  };
 
   return (
     <div className="section">
       <div className="section-header">
-        <div>
-          <h1 className="section-title">Dashboard</h1>
-          <p className="section-subtitle">{currentMonthName}</p>
+        <div><h1 className="section-title">Dashboard</h1></div>
+      </div>
+
+      {/* ── THIS MONTH hero ── */}
+      <div className="hero-month-card">
+        <div className="hero-month-title">{monthName}</div>
+        <div className="hero-tiles">
+          <div className="hero-tile hero-tile--income">
+            <div className="hero-tile-label">Income</div>
+            <div className="hero-tile-value">{formatCAD(totalInc)}</div>
+          </div>
+          <div className="hero-tile hero-tile--dasond">
+            <div className="hero-tile-label">Dasond</div>
+            <div className="hero-tile-value">{formatCAD(dasond)}</div>
+            <div className="hero-tile-sub">12.5%</div>
+          </div>
+          <div className="hero-tile hero-tile--after">
+            <div className="hero-tile-label">After Dasond</div>
+            <div className="hero-tile-value">{formatCAD(afterDas)}</div>
+          </div>
+          <div className="hero-tile hero-tile--expenses">
+            <div className="hero-tile-label">Expenses</div>
+            <div className="hero-tile-value">{formatCAD(expenses)}</div>
+          </div>
+          <div className={`hero-tile ${surplus >= 0 ? 'hero-tile--surplus-pos' : 'hero-tile--surplus-neg'}`}>
+            <div className="hero-tile-label">Surplus</div>
+            <div className="hero-tile-value">{formatCAD(surplus)}</div>
+          </div>
         </div>
       </div>
 
-      {/* Annual overview tiles */}
-      <div className="annual-tiles">
-        <div className="annual-tile annual-tile--income">
-          <div className="annual-tile-label">Annual Income</div>
-          <div className="annual-tile-value">{formatCAD(annualIncome)}</div>
-          <div className="annual-tile-sub">{formatCAD(monthlyIncome)}/mo × 12</div>
+      {/* ── ANNUAL strip ── */}
+      <div className="annual-strip">
+        <div className="annual-strip-item">
+          <span className="annual-strip-label">Annual Income</span>
+          <span className="annual-strip-value">{formatCAD(annualInc)}</span>
         </div>
-        <div className="annual-tile annual-tile--expenses">
-          <div className="annual-tile-label">Expenses This Year</div>
-          <div className="annual-tile-value">{formatCAD(annualExpenses)}</div>
-          <div className="annual-tile-sub">of {formatCAD(annualBudgetedExpenses)} budgeted</div>
+        <div className="annual-strip-divider" />
+        <div className="annual-strip-item">
+          <span className="annual-strip-label">Expenses This Year</span>
+          <span className="annual-strip-value">{formatCAD(annualExp)}</span>
+          <span className="annual-strip-sub">of {formatCAD(annualBud)} budgeted</span>
         </div>
-        <div className={`annual-tile ${netThisYear >= 0 ? 'annual-tile--net-pos' : 'annual-tile--net-neg'}`}>
-          <div className="annual-tile-label">Net This Year</div>
-          <div className="annual-tile-value">{formatCAD(netThisYear)}</div>
-          <div className="annual-tile-sub">income minus actual expenses</div>
+        <div className="annual-strip-divider" />
+        <div className="annual-strip-item">
+          <span className="annual-strip-label">Net This Year</span>
+          <span className={`annual-strip-value ${annualInc - annualExp >= 0 ? 'pos' : 'neg'}`}>{formatCAD(annualInc - annualExp)}</span>
         </div>
       </div>
 
-      {/* This month summary */}
+      {/* ── SAVINGS GOALS ── */}
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">This Month — {currentMonthName}</h2>
+          <h2 className="card-title">Savings Goals</h2>
+          {!addingGoal && <button onClick={() => setAddingGoal(true)} className="btn-add-small"><Plus size={14} /> Add Goal</button>}
         </div>
-        <div className="month-summary-grid">
-          <div className="month-summary-item">
-            <span className="ms-label">Income</span>
-            <span className="ms-value">{formatCAD(monthlyIncome + currentIncomeBonuses)}</span>
-          </div>
-          <div className="month-summary-item">
-            <span className="ms-label">Expenses</span>
-            <span className="ms-value">{formatCAD(currentExpenses)}</span>
-          </div>
-          <div className="month-summary-item">
-            <span className="ms-label">Surplus</span>
-            <span className={`ms-value ${currentSurplus >= 0 ? 'pos' : 'neg'}`}>{formatCAD(currentSurplus)}</span>
-          </div>
+
+        {savingsGoals.length === 0 && !addingGoal && <p className="empty-hint">No savings goals yet.</p>}
+
+        <div className="goals-list">
+          {savingsGoals.map(goal => {
+            const pct = goal.target > 0 ? Math.min(100, (goal.current / goal.target) * 100) : 0;
+            return (
+              <div key={goal.id} className="goal-row">
+                <div className="goal-top-row">
+                  <span className="goal-name">{goal.name}</span>
+                  <span className="goal-pct">{pct.toFixed(0)}%</span>
+                  <button onClick={() => setSavingsGoals(p => p.filter(g => g.id !== goal.id))} className="icon-btn icon-btn--cancel"><Trash2 size={13} /></button>
+                </div>
+                <div className="goal-progress-bar">
+                  <div className="goal-progress-fill" style={{ width: `${pct}%` }} />
+                </div>
+                {/* Current — editable like account balance */}
+                <div className="goal-amounts-row">
+                  <span className="goal-field-label">Saved</span>
+                  {editGoalId === goal.id && editGoalField === 'current' ? (
+                    <div className="account-edit">
+                      <span className="edit-prefix">$</span>
+                      <input autoFocus type="number" value={editGoalVal}
+                        onChange={e => setEditGoalVal(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveEditGoal(); if (e.key === 'Escape') setEditGoalId(null); }}
+                        className="edit-input" />
+                      <button onClick={saveEditGoal} className="icon-btn icon-btn--save"><Check size={15} /></button>
+                      <button onClick={() => setEditGoalId(null)} className="icon-btn icon-btn--cancel"><X size={15} /></button>
+                    </div>
+                  ) : (
+                    <div className="account-value-row">
+                      <span className="account-value">{formatCAD(goal.current)}</span>
+                      <button onClick={() => startEditGoal(goal.id, 'current', goal.current)} className="icon-btn icon-btn--edit"><Pencil size={13} /></button>
+                    </div>
+                  )}
+                  <span className="goal-sep">of</span>
+                  {/* Target */}
+                  <span className="goal-field-label">Goal</span>
+                  {editGoalId === goal.id && editGoalField === 'target' ? (
+                    <div className="account-edit">
+                      <span className="edit-prefix">$</span>
+                      <input autoFocus type="number" value={editGoalVal}
+                        onChange={e => setEditGoalVal(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveEditGoal(); if (e.key === 'Escape') setEditGoalId(null); }}
+                        className="edit-input" />
+                      <button onClick={saveEditGoal} className="icon-btn icon-btn--save"><Check size={15} /></button>
+                      <button onClick={() => setEditGoalId(null)} className="icon-btn icon-btn--cancel"><X size={15} /></button>
+                    </div>
+                  ) : (
+                    <div className="account-value-row">
+                      <span className="account-value goal-target-val">{formatCAD(goal.target)}</span>
+                      <button onClick={() => startEditGoal(goal.id, 'target', goal.target)} className="icon-btn icon-btn--edit"><Pencil size={13} /></button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
+
+        {addingGoal && (
+          <div className="add-account-form">
+            <input autoFocus type="text" placeholder="Goal name"
+              value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="add-name-input" />
+            <div className="amount-input-wrap">
+              <span className="input-prefix">$</span>
+              <input type="number" placeholder="Target amount"
+                value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addGoal(); }} className="amount-input" />
+            </div>
+            <button onClick={addGoal} className="btn btn-primary btn-sm">Add</button>
+            <button onClick={() => setAddingGoal(false)} className="btn btn-ghost btn-sm">Cancel</button>
+          </div>
+        )}
       </div>
 
-      {/* Account balances */}
+      {/* ── ACCOUNT BALANCES ── */}
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Account Balances</h2>
-          <span className="card-hint">Click pencil to edit</span>
+          {!addingAcc && <button onClick={() => setAddingAcc(true)} className="btn-add-small"><Plus size={14} /> Add Account</button>}
         </div>
         <div className="accounts-grid">
-          {(Object.keys(ACCOUNT_LABELS) as EditableAccount[]).map(key => (
-            <div key={key} className="account-row">
-              <span className="account-name">{ACCOUNT_LABELS[key]}</span>
-              {editing === key ? (
+          {accounts.map(acc => (
+            <div key={acc.id} className="account-row">
+              <span className="account-name">{acc.name}</span>
+              {editAccId === acc.id ? (
                 <div className="account-edit">
                   <span className="edit-prefix">$</span>
-                  <input
-                    type="number"
-                    value={editValue}
-                    onChange={e => setEditValue(e.target.value)}
-                    className="edit-input"
-                    autoFocus
-                    onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
-                  />
-                  <button onClick={saveEdit} className="icon-btn icon-btn--save"><Check size={16} /></button>
-                  <button onClick={cancelEdit} className="icon-btn icon-btn--cancel"><X size={16} /></button>
+                  <input type="number" value={editAccVal} onChange={e => setEditAccVal(e.target.value)}
+                    className="edit-input" autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') saveEditAcc(); if (e.key === 'Escape') setEditAccId(null); }} />
+                  <button onClick={saveEditAcc} className="icon-btn icon-btn--save"><Check size={16} /></button>
+                  <button onClick={() => setEditAccId(null)} className="icon-btn icon-btn--cancel"><X size={16} /></button>
                 </div>
               ) : (
                 <div className="account-value-row">
-                  <span className={`account-value ${key === 'studentLoans' && balances[key] > 0 ? 'neg' : ''}`}>
-                    {key === 'studentLoans' && balances[key] > 0 ? '−' : ''}{formatCAD(balances[key])}
-                  </span>
-                  <button onClick={() => startEdit(key)} className="icon-btn icon-btn--edit"><Pencil size={14} /></button>
+                  <span className="account-value">{formatCAD(acc.amount)}</span>
+                  <button onClick={() => startEditAcc(acc.id, acc.amount)} className="icon-btn icon-btn--edit"><Pencil size={14} /></button>
+                  <button onClick={() => setAccounts(p => p.filter(a => a.id !== acc.id))} className="icon-btn icon-btn--cancel"><Trash2 size={13} /></button>
                 </div>
               )}
             </div>
           ))}
         </div>
+        {addingAcc && (
+          <div className="add-account-form">
+            <input autoFocus type="text" placeholder="Account name"
+              value={newAccName} onChange={e => setNewAccName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addAccount(); }} className="add-name-input" />
+            <button onClick={addAccount} className="btn btn-primary btn-sm">Add</button>
+            <button onClick={() => setAddingAcc(false)} className="btn btn-ghost btn-sm">Cancel</button>
+          </div>
+        )}
       </div>
 
-      {/* Data & Sync */}
+      {/* ── DATA & SYNC ── */}
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Data &amp; Sync</h2>
           <span className={`sync-status-badge sync-status-badge--${syncStatus}`}>
-            {syncStatus === 'saving' ? 'Saving…' : syncStatus === 'error' ? 'Offline' : 'Synced'}
+            {syncStatus === 'saving' ? 'Saving…' : syncStatus === 'error' ? 'Error' : 'Synced'}
           </span>
         </div>
         <div className="sync-actions">

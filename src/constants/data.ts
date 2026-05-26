@@ -1,6 +1,6 @@
-import type { AccountBalances, MonthData } from '../types';
+import type { Account, MonthData } from '../types';
 
-export const DATA_VERSION = 5;
+export const DATA_VERSION = 6;
 
 const YEAR = new Date().getFullYear();
 export const MONTHS = [
@@ -28,21 +28,22 @@ export const INCOME_TYPES = [
   'Salary', 'Bonus', 'Freelance', 'Investment', 'Other',
 ] as const;
 
-export const DEFAULT_BALANCES: AccountBalances = {
-  debit: 0,
-  expenses: 0,
-  tfsa: 0,
-  fhsa: 0,
-  studentLoans: 0,
-};
+export const DEFAULT_ACCOUNTS: Account[] = [
+  { id: 'debit',        name: 'Chequing / Debit', amount: 0 },
+  { id: 'expenses',     name: 'Expenses',          amount: 0 },
+  { id: 'tfsa',         name: 'TFSA',              amount: 0 },
+  { id: 'fhsa',         name: 'FHSA',              amount: 0 },
+  { id: 'studentLoans', name: 'Student Loans',     amount: 0 },
+];
 
 export function buildDefaultMonthlyData(): MonthData[] {
-  return MONTHS.map(m => ({ monthIndex: m.index, items: [] }));
+  return MONTHS.map(m => ({ monthIndex: m.index, monthlyIncome: 0, items: [] }));
 }
 
-export function migrateMonthlyData(stored: MonthData[]): MonthData[] {
+export function migrateMonthlyData(stored: MonthData[], globalIncome = 0): MonthData[] {
   return stored.map(md => ({
     ...md,
+    monthlyIncome: (md as MonthData & { monthlyIncome?: number }).monthlyIncome ?? globalIncome,
     items: (md.items ?? []).map(item => ({
       ...item,
       kind: item.kind ?? 'expense',

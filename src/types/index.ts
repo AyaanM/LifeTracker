@@ -1,9 +1,14 @@
-export interface AccountBalances {
-  debit: number;
-  expenses: number;
-  tfsa: number;
-  fhsa: number;
-  studentLoans: number;
+export interface Account {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  target: number;
+  current: number;
 }
 
 export interface BudgetItem {
@@ -17,6 +22,7 @@ export interface BudgetItem {
 
 export interface MonthData {
   monthIndex: number;
+  monthlyIncome: number;
   items: BudgetItem[];
 }
 

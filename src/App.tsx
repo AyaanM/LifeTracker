@@ -11,22 +11,13 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<NavSection>('dashboard');
   const [syncCode] = useLocalStorage<string>('tbf-sync-code', generateSyncCode());
 
-  const {
-    syncStatus,
-    balances,
-    setBalances,
-    monthlyData,
-    setMonthlyData,
-    monthlyIncome,
-    setMonthlyIncome,
-    refresh,
-  } = useCloudData(syncCode);
+  const { syncStatus, accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData, setMonthlyData, refresh } = useCloudData(syncCode);
 
   if (syncStatus === 'loading') {
     return (
       <div className="cloud-loading">
         <Loader2 size={32} className="spin" />
-        <p>Loading your data…</p>
+        <p>Loading…</p>
       </div>
     );
   }
@@ -35,21 +26,13 @@ export default function App() {
     <Layout activeSection={activeSection} onNavigate={setActiveSection}>
       {activeSection === 'dashboard' && (
         <Dashboard
-          balances={balances}
-          setBalances={setBalances}
-          monthlyData={monthlyData}
-          monthlyIncome={monthlyIncome}
-          syncStatus={syncStatus}
-          onRefresh={refresh}
+          accounts={accounts} setAccounts={setAccounts}
+          savingsGoals={savingsGoals} setSavingsGoals={setSavingsGoals}
+          monthlyData={monthlyData} syncStatus={syncStatus} onRefresh={refresh}
         />
       )}
       {activeSection === 'budget' && (
-        <MonthlyBudget
-          monthlyData={monthlyData}
-          setMonthlyData={setMonthlyData}
-          monthlyIncome={monthlyIncome}
-          setMonthlyIncome={setMonthlyIncome}
-        />
+        <MonthlyBudget monthlyData={monthlyData} setMonthlyData={setMonthlyData} />
       )}
     </Layout>
   );

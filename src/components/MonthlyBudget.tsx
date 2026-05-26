@@ -7,8 +7,6 @@ import { Plus, Trash2, ChevronDown, RotateCcw } from 'lucide-react';
 interface Props {
   monthlyData: MonthData[];
   setMonthlyData: (d: MonthData[] | ((prev: MonthData[]) => MonthData[])) => void;
-  monthlyIncome: number;
-  setMonthlyIncome: (v: number | ((prev: number) => number)) => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -36,7 +34,7 @@ function CategoryBadge({ cat }: { cat: string }) {
   );
 }
 
-export default function MonthlyBudget({ monthlyData, setMonthlyData, monthlyIncome, setMonthlyIncome }: Props) {
+export default function MonthlyBudget({ monthlyData, setMonthlyData }: Props) {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [addingItem, setAddingItem] = useState(false);
   const [newKind, setNewKind] = useState<'income' | 'expense'>('expense');
@@ -44,8 +42,11 @@ export default function MonthlyBudget({ monthlyData, setMonthlyData, monthlyInco
   const [newName, setNewName] = useState('');
   const [newBudgeted, setNewBudgeted] = useState('');
   const [confirmClear, setConfirmClear] = useState(false);
+  const [incomeInput, setIncomeInput] = useState('');
+  const [editingIncome, setEditingIncome] = useState(false);
 
   const monthData = monthlyData[selectedMonth];
+  const monthlyIncome = monthData?.monthlyIncome ?? 0;
   const incomeItems = monthData?.items.filter(i => i.kind === 'income') ?? [];
   const expenseItems = monthData?.items.filter(i => i.kind === 'expense') ?? [];
 
@@ -57,6 +58,36 @@ export default function MonthlyBudget({ monthlyData, setMonthlyData, monthlyInco
   const totalIncome  = monthlyIncome + totalBudgetedIncome;
   const budgetedSurplus = totalIncome - totalBudgetedExpenses;
   const actualSurplus   = (monthlyIncome + totalActualIncome) - totalActualExpenses;
+
+  function startEditIncome() {
+    setIncomeInput(monthlyIncome > 0 ? monthlyIncome.toString() : '');
+    setEditingIncome(true);
+  }
+
+  function applyIncomeToMonth() {
+    const v = parseFloat(incomeInput);
+    if (isNaN(v)) { setEditingIncome(false); return; }
+    setMonthlyData(prev => prev.map(md =>
+      md.monthIndex === selectedMonth ? { ...md, monthlyIncome: v } : md
+    ));
+    setEditingIncome(false);
+  }
+
+  function applyIncomeToAll() {
+    const v = parseFloat(incomeInput);
+    if (isNaN(v)) { setEditingIncome(false); return; }
+    setMonthlyData(prev => prev.map(md => ({ ...md, monthlyIncome: v })));
+    setEditingIncome(false);
+  }
+
+  function applyIncomeToRemaining() {
+    const v = parseFloat(incomeInput);
+    if (isNaN(v)) { setEditingIncome(false); return; }
+    setMonthlyData(prev => prev.map(md =>
+      md.monthIndex >= selectedMonth ? { ...md, monthlyIncome: v } : md
+    ));
+    setEditingIncome(false);
+  }
 
   function updateField(itemId: string, field: 'budgeted' | 'actual', value: string) {
     const num = value === '' ? 0 : parseFloat(value);
@@ -120,23 +151,39 @@ export default function MonthlyBudget({ monthlyData, setMonthlyData, monthlyInco
         )}
       </div>
 
-      {/* Global income */}
+      {/* Per-month income */}
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Monthly Income</h2>
-          <span className="card-hint">Same every month</span>
+          <span className="card-hint">{MONTHS[selectedMonth]?.name}</span>
         </div>
-        <div className="income-edit-row">
-          <span className="input-prefix income-prefix">$</span>
-          <input
-            type="number"
-            value={monthlyIncome || ''}
-            onChange={e => { const n = parseFloat(e.target.value); if (!isNaN(n)) setMonthlyIncome(n); else if (e.target.value === '') setMonthlyIncome(0); }}
-            className="income-edit-input"
-            placeholder="0.00"
-          />
-          <span className="income-annual">= {formatCAD(monthlyIncome * 12)} / year</span>
-        </div>
+        {editingIncome ? (
+          <div className="income-edit-expanded">
+            <div className="income-edit-row">
+              <span className="input-prefix income-prefix">$</span>
+              <input
+                autoFocus
+                type="number"
+                value={incomeInput}
+                onChange={e => setIncomeInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') applyIncomeToMonth(); if (e.key === 'Escape') setEditingIncome(false); }}
+                className="income-edit-input"
+                placeholder="0.00"
+              />
+            </div>
+            <div className="income-apply-btns">
+              <button onClick={applyIncomeToMonth} className="btn btn-primary btn-sm">Save this month</button>
+              <button onClick={applyIncomeToRemaining} className="btn btn-ghost btn-sm">Apply to remaining months</button>
+              <button onClick={applyIncomeToAll} className="btn btn-ghost btn-sm">Apply to all months</button>
+              <button onClick={() => setEditingIncome(false)} className="btn btn-ghost btn-sm">Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div className="income-edit-row">
+            <span className="income-display">{formatCAD(monthlyIncome)}</span>
+            <button onClick={startEditIncome} className="btn btn-ghost btn-sm">Edit</button>
+          </div>
+        )}
       </div>
 
       {/* Month selector */}
