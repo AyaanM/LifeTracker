@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import type { Account, SavingsGoal, MonthData } from '../types';
 import { MONTHS } from '../constants/data';
 import { formatCAD } from '../utils/formatters';
-import { Pencil, Check, X, Download, Upload, RefreshCw, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Check, X, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import type { SyncStatus } from '../hooks/useCloudData';
 
 interface Props {
@@ -32,27 +32,21 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
   const [newGoalName, setNewGoalName]     = useState('');
   const [newGoalTarget, setNewGoalTarget] = useState('');
 
-  // Sync
-  const [importError, setImportError]     = useState('');
-  const [importSuccess, setImportSuccess] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const cur = monthlyData[CURRENT];
   const monthName = MONTHS[CURRENT]?.name ?? '';
 
-  const income    = cur?.monthlyIncome ?? 0;
-  const bonuses   = cur?.items.filter(i => i.kind === 'income').reduce((s, i) => s + i.actual, 0) ?? 0;
-  const totalInc  = income + bonuses;
-  const dasond    = income * 0.125;
-  const afterDas  = totalInc - dasond;
-  const expenses  = cur?.items.filter(i => i.kind === 'expense').reduce((s, i) => s + i.actual, 0) ?? 0;
-  const surplus   = afterDas - expenses;
+  const income   = cur?.monthlyIncome ?? 0;
+  const bonuses  = cur?.items.filter(i => i.kind === 'income').reduce((s, i) => s + i.actual, 0) ?? 0;
+  const totalInc = income + bonuses;
+  const dasond   = income * 0.125;
+  const afterDas = totalInc - dasond;
+  const expenses = cur?.items.filter(i => i.kind === 'expense').reduce((s, i) => s + i.actual, 0) ?? 0;
+  const surplus  = afterDas - expenses;
 
   const annualInc = monthlyData.reduce((s, m) => s + (m.monthlyIncome ?? 0), 0);
   const annualExp = monthlyData.reduce((s, m) => s + m.items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.actual, 0), 0);
-  const annualBud = monthlyData.reduce((s, m) => s + m.items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.budgeted, 0), 0);
 
-  // ── Accounts ────────────────────────────────────────────
+  // ── Accounts ─────────────────────────────────────────────
   const startEditAcc = (id: string, amt: number) => { setEditAccId(id); setEditAccVal(amt.toString()); };
   const saveEditAcc  = () => {
     const v = parseFloat(editAccVal);
@@ -79,29 +73,6 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
     if (!newGoalName.trim()) return;
     setSavingsGoals(p => [...p, { id: `goal-${Date.now()}`, name: newGoalName.trim(), target: parseFloat(newGoalTarget) || 0, current: 0 }]);
     setNewGoalName(''); setNewGoalTarget(''); setAddingGoal(false);
-  };
-
-  // ── Export / Import ──────────────────────────────────────
-  const exportData = () => {
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), accounts, savingsGoals, monthlyData }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url;
-    a.download = `blueprint-${new Date().toISOString().split('T')[0]}.json`; a.click();
-    URL.revokeObjectURL(url);
-  };
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setImportError(''); setImportSuccess(false);
-    const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const d = JSON.parse(ev.target?.result as string);
-        if (d.accounts) setAccounts(d.accounts);
-        if (d.savingsGoals) setSavingsGoals(d.savingsGoals);
-        setImportSuccess(true); setTimeout(() => setImportSuccess(false), 3000);
-      } catch { setImportError('Could not parse file.'); }
-    };
-    reader.readAsText(file); e.target.value = '';
   };
 
   return (
@@ -148,7 +119,6 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
         <div className="annual-strip-item">
           <span className="annual-strip-label">Expenses This Year</span>
           <span className="annual-strip-value">{formatCAD(annualExp)}</span>
-          <span className="annual-strip-sub">of {formatCAD(annualBud)} budgeted</span>
         </div>
         <div className="annual-strip-divider" />
         <div className="annual-strip-item">
@@ -179,7 +149,6 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
                 <div className="goal-progress-bar">
                   <div className="goal-progress-fill" style={{ width: `${pct}%` }} />
                 </div>
-                {/* Current — editable like account balance */}
                 <div className="goal-amounts-row">
                   <span className="goal-field-label">Saved</span>
                   {editGoalId === goal.id && editGoalField === 'current' ? (
@@ -199,7 +168,6 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
                     </div>
                   )}
                   <span className="goal-sep">of</span>
-                  {/* Target */}
                   <span className="goal-field-label">Goal</span>
                   {editGoalId === goal.id && editGoalField === 'target' ? (
                     <div className="account-edit">
@@ -284,17 +252,15 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
         <div className="card-header">
           <h2 className="card-title">Data &amp; Sync</h2>
           <span className={`sync-status-badge sync-status-badge--${syncStatus}`}>
-            {syncStatus === 'saving' ? 'Saving…' : syncStatus === 'error' ? 'Error' : 'Synced'}
+            {syncStatus === 'saving' ? 'Saving…' : syncStatus === 'error' ? 'Sync Error' : syncStatus === 'loading' ? 'Loading…' : 'Synced'}
           </span>
         </div>
         <div className="sync-actions">
           <button onClick={onRefresh} className="btn btn-ghost"><RefreshCw size={16} /><span>Refresh</span></button>
-          <button onClick={exportData} className="btn btn-ghost"><Download size={16} /><span>Export</span></button>
-          <button onClick={() => fileInputRef.current?.click()} className="btn btn-ghost"><Upload size={16} /><span>Import</span></button>
-          <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
         </div>
-        {importError && <p className="sync-error">{importError}</p>}
-        {importSuccess && <p className="sync-success">Imported successfully.</p>}
+        {syncStatus === 'error' && (
+          <p className="sync-error">Could not reach the cloud. Check your internet connection, or verify your Firebase Firestore rules allow reads and writes.</p>
+        )}
       </div>
     </div>
   );

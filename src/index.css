@@ -397,6 +397,10 @@ body {
   letter-spacing: 0.4px;
   font-weight: 600;
 }
+/* Simplified (amount-only) variant */
+.budget-table-header--simple {
+  grid-template-columns: 1fr 140px 40px;
+}
 
 .budget-group { margin-top: 0.75rem; }
 .budget-group-label { margin-bottom: 0.4rem; }
@@ -409,6 +413,7 @@ body {
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
 }
+.budget-row--simple { grid-template-columns: 1fr 140px 40px; }
 .budget-row:last-child { border-bottom: none; }
 
 .budget-item-name { font-size: 0.875rem; color: var(--text); }
@@ -1470,6 +1475,47 @@ body {
 .income-display { font-size: 1.2rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
 .income-edit-expanded { display: flex; flex-direction: column; gap: 0.65rem; }
 .income-apply-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ── Category Breakdown ────────────────────────────────── */
+.cat-breakdown {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.cat-breakdown-group {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cat-breakdown-group-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  margin-bottom: 0.1rem;
+}
+.cat-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.cat-breakdown-row:last-child { border-bottom: none; }
+.cat-breakdown-val {
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* column aliases for simple budget table */
+.col-item   { }
+.col-amount { }
 
 /* ── Clear confirm ─────────────────────────────────────── */
 .clear-confirm { display: flex; align-items: center; gap: 0.5rem; }

@@ -16,7 +16,7 @@ export interface BudgetItem {
   name: string;
   kind: 'income' | 'expense';
   category: string;
-  budgeted: number;
+  budgeted?: number; // legacy field, no longer shown in UI
   actual: number;
 }
 

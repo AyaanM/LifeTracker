@@ -19,13 +19,11 @@ export const MONTHS = [
 ];
 
 export const EXPENSE_TYPES = [
-  'Restaurant', 'Groceries', 'Gas', 'Education', 'Entertainment',
-  'Shopping', 'Health', 'Utilities', 'Rent', 'Transport',
-  'Savings', 'Subscription', 'Other',
+  'Restaurant', 'Gas', 'Groceries', 'Personal', 'Rent', 'Investments',
 ] as const;
 
 export const INCOME_TYPES = [
-  'Salary', 'Bonus', 'Freelance', 'Investment', 'Other',
+  'Salary', 'Bonus', 'Other',
 ] as const;
 
 export const DEFAULT_ACCOUNTS: Account[] = [
