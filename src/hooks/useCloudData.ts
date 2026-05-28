@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import type { Account, SavingsGoal, MonthData } from '../types';
+import type { Account, SavingsGoal, MonthData, KanbanTask } from '../types';
 import { DEFAULT_ACCOUNTS, buildDefaultMonthlyData, migrateMonthlyData, DATA_VERSION } from '../constants/data';
+
+const DEFAULT_KANBAN_CATEGORIES = ['Work', 'Volunteer', 'Personal'];
 
 interface CloudPayload {
   accounts: Account[];
   savingsGoals: SavingsGoal[];
   monthlyData: MonthData[];
+  kanbanTasks: KanbanTask[];
+  kanbanCategories: string[];
   version: number;
   updatedAt: number;
 }
@@ -18,15 +22,19 @@ const SAVE_DEBOUNCE_MS = 800;
 export type SyncStatus = 'loading' | 'idle' | 'saving' | 'error';
 
 export function useCloudData(syncCode: string) {
-  const [accounts, setAccountsState]        = useState<Account[]>(DEFAULT_ACCOUNTS);
-  const [savingsGoals, setSavingsGoalsState] = useState<SavingsGoal[]>([]);
-  const [monthlyData, setMonthlyDataState]   = useState<MonthData[]>(buildDefaultMonthlyData());
-  const [syncStatus, setSyncStatus]          = useState<SyncStatus>('loading');
+  const [accounts, setAccountsState]                    = useState<Account[]>(DEFAULT_ACCOUNTS);
+  const [savingsGoals, setSavingsGoalsState]             = useState<SavingsGoal[]>([]);
+  const [monthlyData, setMonthlyDataState]               = useState<MonthData[]>(buildDefaultMonthlyData());
+  const [kanbanTasks, setKanbanTasksState]               = useState<KanbanTask[]>([]);
+  const [kanbanCategories, setKanbanCategoriesState]     = useState<string[]>(DEFAULT_KANBAN_CATEGORIES);
+  const [syncStatus, setSyncStatus]                      = useState<SyncStatus>('loading');
 
   const latestRef     = useRef<CloudPayload>({
     accounts: DEFAULT_ACCOUNTS,
     savingsGoals: [],
     monthlyData: buildDefaultMonthlyData(),
+    kanbanTasks: [],
+    kanbanCategories: DEFAULT_KANBAN_CATEGORIES,
     version: DATA_VERSION,
     updatedAt: 0,
   });
@@ -79,6 +87,24 @@ export function useCloudData(syncCode: string) {
     });
   }, [scheduleSave]);
 
+  const setKanbanTasks = useCallback((value: KanbanTask[] | ((p: KanbanTask[]) => KanbanTask[])) => {
+    setKanbanTasksState(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      latestRef.current = { ...latestRef.current, kanbanTasks: next, updatedAt: Date.now() };
+      scheduleSave();
+      return next;
+    });
+  }, [scheduleSave]);
+
+  const setKanbanCategories = useCallback((value: string[] | ((p: string[]) => string[])) => {
+    setKanbanCategoriesState(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      latestRef.current = { ...latestRef.current, kanbanCategories: next, updatedAt: Date.now() };
+      scheduleSave();
+      return next;
+    });
+  }, [scheduleSave]);
+
   const loadFromCloud = useCallback(async () => {
     hasLoaded.current = false;
     setSyncStatus('loading');
@@ -109,12 +135,17 @@ export function useCloudData(syncCode: string) {
           accs = DEFAULT_ACCOUNTS;
         }
 
-        const goals = data.savingsGoals ?? [];
+        const goals   = data.savingsGoals ?? [];
+        const ktasks  = data.kanbanTasks ?? [];
+        const kcats   = data.kanbanCategories ?? DEFAULT_KANBAN_CATEGORIES;
         setAccountsState(accs);
         setSavingsGoalsState(goals);
         setMonthlyDataState(migrated);
+        setKanbanTasksState(ktasks);
+        setKanbanCategoriesState(kcats);
         latestRef.current = {
           accounts: accs, savingsGoals: goals, monthlyData: migrated,
+          kanbanTasks: ktasks, kanbanCategories: kcats,
           version: DATA_VERSION, updatedAt: data.updatedAt ?? 0,
         };
       }
@@ -136,6 +167,8 @@ export function useCloudData(syncCode: string) {
     accounts, setAccounts,
     savingsGoals, setSavingsGoals,
     monthlyData, setMonthlyData,
+    kanbanTasks, setKanbanTasks,
+    kanbanCategories, setKanbanCategories,
     refresh: loadFromCloud,
   };
 }

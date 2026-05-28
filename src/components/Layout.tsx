@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { NavSection } from '../types';
-import { LayoutDashboard, BookOpen, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BookOpen, KanbanSquare, Menu, X } from 'lucide-react';
 
 interface Props {
   activeSection: NavSection;
@@ -12,6 +12,7 @@ interface Props {
 const NAV_ITEMS: { id: NavSection; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard',     icon: LayoutDashboard },
   { id: 'budget',    label: 'Monthly Budget', icon: BookOpen },
+  { id: 'kanban',    label: 'Tasks',          icon: KanbanSquare },
 ];
 
 export default function Layout({ activeSection, onNavigate, children }: Props) {

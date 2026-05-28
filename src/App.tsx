@@ -5,13 +5,22 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import MonthlyBudget from './components/MonthlyBudget';
+import Kanban from './components/Kanban';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<NavSection>('dashboard');
   const [syncCode] = useLocalStorage<string>('tbf-sync-code', generateSyncCode());
 
-  const { syncStatus, accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData, setMonthlyData, refresh } = useCloudData(syncCode);
+  const {
+    syncStatus,
+    accounts, setAccounts,
+    savingsGoals, setSavingsGoals,
+    monthlyData, setMonthlyData,
+    kanbanTasks, setKanbanTasks,
+    kanbanCategories, setKanbanCategories,
+    refresh,
+  } = useCloudData(syncCode);
 
   if (syncStatus === 'loading') {
     return (
@@ -33,6 +42,12 @@ export default function App() {
       )}
       {activeSection === 'budget' && (
         <MonthlyBudget monthlyData={monthlyData} setMonthlyData={setMonthlyData} />
+      )}
+      {activeSection === 'kanban' && (
+        <Kanban
+          tasks={kanbanTasks} setTasks={setKanbanTasks}
+          categories={kanbanCategories} setCategories={setKanbanCategories}
+        />
       )}
     </Layout>
   );

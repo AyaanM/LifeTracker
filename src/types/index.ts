@@ -26,4 +26,13 @@ export interface MonthData {
   items: BudgetItem[];
 }
 
-export type NavSection = 'dashboard' | 'budget';
+export interface KanbanTask {
+  id: string;
+  title: string;
+  category: string;
+  dueDate: string;   // YYYY-MM-DD or ''
+  status: 'not-started' | 'in-progress' | 'done';
+  createdAt: number;
+}
+
+export type NavSection = 'dashboard' | 'budget' | 'kanban';
