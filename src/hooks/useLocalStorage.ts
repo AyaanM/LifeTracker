@@ -4,7 +4,10 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
   const [state, setState] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      if (item !== null) return JSON.parse(item);
+      // First visit — persist the generated initial value so it survives page reloads
+      window.localStorage.setItem(key, JSON.stringify(initialValue));
+      return initialValue;
     } catch {
       return initialValue;
     }

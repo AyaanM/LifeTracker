@@ -28,8 +28,8 @@ export default function Layout({ activeSection, onNavigate, children }: Props) {
       <aside className={`sidebar ${mobileOpen ? 'sidebar--open' : ''}`}>
         <div className="sidebar-header">
           <div className="brand">
-            <span className="brand-name">The Blueprint</span>
-            <span className="brand-tagline">stay the course</span>
+            <span className="brand-name">The Life Tracker</span>
+            <span className="brand-tagline">Ayaan Merchant</span>
           </div>
           <button className="mobile-close" onClick={() => setMobileOpen(false)}>
             <X size={20} />
@@ -53,7 +53,7 @@ export default function Layout({ activeSection, onNavigate, children }: Props) {
         </nav>
 
         <div className="sidebar-footer">
-          <span>May 2026 – Aug 2027</span>
+          <span>Lock In</span>
         </div>
       </aside>
 
@@ -64,11 +64,8 @@ export default function Layout({ activeSection, onNavigate, children }: Props) {
           <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
-          <div className="topbar-brand">
-            <span className="brand-name">The Blueprint</span>
-          </div>
           <div className="topbar-right">
-            <span className="topbar-tagline">stay the course</span>
+            <span className="topbar-tagline">"Empires aren't built in a day" - Marcus Aurelius</span>
           </div>
         </header>
         <main className="main-content">
