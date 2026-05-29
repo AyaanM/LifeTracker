@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { KanbanTask } from '../types';
-import { Plus, Trash2, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, X, Check, Pencil } from 'lucide-react';
 
 type Status = KanbanTask['status'];
 
@@ -30,38 +30,37 @@ function catColor(cat: string, categories: string[]) {
 
 function formatDue(dateStr: string): { label: string; overdue: boolean } | null {
   if (!dateStr) return null;
-  const d = new Date(dateStr + 'T00:00:00');
+  const d     = new Date(dateStr + 'T00:00:00');
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const diff = Math.round((d.getTime() - today.getTime()) / 86_400_000);
-  if (diff < 0)  return { label: `${Math.abs(diff)}d overdue`, overdue: true };
-  if (diff === 0) return { label: 'Due today', overdue: false };
+  const diff  = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+  if (diff < 0)   return { label: `${Math.abs(diff)}d overdue`, overdue: true };
+  if (diff === 0) return { label: 'Due today',    overdue: false };
   if (diff === 1) return { label: 'Due tomorrow', overdue: false };
-  return {
-    label: d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
-    overdue: false,
-  };
+  return { label: d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }), overdue: false };
 }
 
 interface Props {
-  tasks: KanbanTask[];
-  setTasks: (v: KanbanTask[] | ((p: KanbanTask[]) => KanbanTask[])) => void;
-  categories: string[];
-  setCategories: (v: string[] | ((p: string[]) => string[])) => void;
+  tasks:         KanbanTask[];
+  setTasks:      (v: KanbanTask[] | ((p: KanbanTask[]) => KanbanTask[])) => void;
+  categories:    string[];
+  setCategories: (v: string[]    | ((p: string[])    => string[]))    => void;
 }
 
 export default function Kanban({ tasks, setTasks, categories, setCategories }: Props) {
-  // Add-task form state
-  const [adding, setAdding]         = useState(false);
-  const [newTitle, setNewTitle]     = useState('');
-  const [newCat, setNewCat]         = useState(categories[0] ?? 'Work');
-  const [newDue, setNewDue]         = useState('');
-  const [newStatus, setNewStatus]   = useState<Status>('not-started');
-  // New-category creation inside the form
-  const [creatingCat, setCreatingCat] = useState(false);
-  const [newCatName, setNewCatName]   = useState('');
+  // Add-task form
+  const [adding,       setAdding]       = useState(false);
+  const [newTitle,     setNewTitle]     = useState('');
+  const [newCat,       setNewCat]       = useState(categories[0] ?? 'Work');
+  const [newDue,       setNewDue]       = useState('');
+  const [newStatus,    setNewStatus]    = useState<Status>('not-started');
+  // New category creation (inside the form)
+  const [creatingCat,  setCreatingCat]  = useState(false);
+  const [newCatName,   setNewCatName]   = useState('');
+  // Category delete mode
+  const [managingCats, setManagingCats] = useState(false);
   // Inline card title editing
-  const [editId, setEditId]         = useState<string | null>(null);
-  const [editTitle, setEditTitle]   = useState('');
+  const [editId,       setEditId]       = useState<string | null>(null);
+  const [editTitle,    setEditTitle]    = useState('');
   // Clear-done confirmation
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -75,11 +74,11 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
   function addTask() {
     if (!newTitle.trim()) return;
     setTasks(p => [...p, {
-      id: `task-${Date.now()}`,
-      title: newTitle.trim(),
-      category: newCat,
-      dueDate: newDue,
-      status: newStatus,
+      id:        `task-${Date.now()}`,
+      title:     newTitle.trim(),
+      category:  newCat,
+      dueDate:   newDue,
+      status:    newStatus,
       createdAt: Date.now(),
     }]);
     setAdding(false);
@@ -109,6 +108,17 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
     setCategories(p => [...p, name]);
     setNewCat(name);
     setCreatingCat(false); setNewCatName('');
+  }
+
+  function deleteCategory(cat: string) {
+    const remaining = categories.filter(c => c !== cat);
+    const fallback  = remaining[0] ?? '';
+    // Reassign any tasks using this category
+    setTasks(p => p.map(t => t.category === cat ? { ...t, category: fallback } : t));
+    setCategories(remaining);
+    if (newCat === cat) setNewCat(fallback);
+    // Exit manage mode if no categories left
+    if (remaining.length === 0) setManagingCats(false);
   }
 
   function clearDone() {
@@ -155,12 +165,34 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
           />
 
           <div className="kanban-form-row">
-            {/* Category */}
+            {/* ── Category ── */}
             <div className="kanban-form-field">
-              <div className="kanban-form-label">Category</div>
+              <div className="kanban-form-label-row">
+                <div className="kanban-form-label">Category</div>
+                {categories.length > 0 && (
+                  <button
+                    className={`kanban-manage-btn ${managingCats ? 'kanban-manage-btn--active' : ''}`}
+                    onClick={() => setManagingCats(m => !m)}
+                    title={managingCats ? 'Done managing' : 'Delete categories'}
+                  >
+                    <Pencil size={11} />
+                    {managingCats ? 'Done' : 'Manage'}
+                  </button>
+                )}
+              </div>
               <div className="kanban-cat-chips">
                 {categories.map(cat => {
                   const c = catColor(cat, categories);
+                  if (managingCats) {
+                    return (
+                      <button key={cat}
+                        className="cat-chip kanban-cat-delete-chip"
+                        onClick={() => deleteCategory(cat)}
+                        title={`Delete "${cat}" category`}>
+                        {cat} <X size={11} />
+                      </button>
+                    );
+                  }
                   return (
                     <button key={cat}
                       className={`cat-chip ${newCat === cat ? 'cat-chip--active' : ''}`}
@@ -170,28 +202,36 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
                     </button>
                   );
                 })}
-                {creatingCat ? (
-                  <div className="kanban-newcat-inline">
-                    <input autoFocus type="text" placeholder="Name" value={newCatName}
-                      onChange={e => setNewCatName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') createCategory(); if (e.key === 'Escape') { setCreatingCat(false); setNewCatName(''); } }}
-                      className="kanban-newcat-input" />
-                    <button onClick={createCategory} className="icon-btn icon-btn--save"><Check size={13} /></button>
-                    <button onClick={() => { setCreatingCat(false); setNewCatName(''); }} className="icon-btn icon-btn--cancel"><X size={13} /></button>
-                  </div>
-                ) : (
-                  <button className="cat-chip kanban-newcat-btn" onClick={() => setCreatingCat(true)}>+ New</button>
+                {!managingCats && (
+                  creatingCat ? (
+                    <div className="kanban-newcat-inline">
+                      <input autoFocus type="text" placeholder="Name" value={newCatName}
+                        onChange={e => setNewCatName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') createCategory();
+                          if (e.key === 'Escape') { setCreatingCat(false); setNewCatName(''); }
+                        }}
+                        className="kanban-newcat-input" />
+                      <button onClick={createCategory} className="icon-btn icon-btn--save"><Check size={13} /></button>
+                      <button onClick={() => { setCreatingCat(false); setNewCatName(''); }} className="icon-btn icon-btn--cancel"><X size={13} /></button>
+                    </div>
+                  ) : (
+                    <button className="cat-chip kanban-newcat-btn" onClick={() => setCreatingCat(true)}>+ New</button>
+                  )
                 )}
               </div>
+              {managingCats && (
+                <p className="kanban-manage-hint">Click a category to delete it. Tasks in that category will be moved to the next one.</p>
+              )}
             </div>
 
-            {/* Due date */}
+            {/* ── Due date ── */}
             <div className="kanban-form-field">
               <div className="kanban-form-label">Due Date</div>
               <input type="date" value={newDue} onChange={e => setNewDue(e.target.value)} className="kanban-date-input" />
             </div>
 
-            {/* Starting column */}
+            {/* ── Starting column ── */}
             <div className="kanban-form-field">
               <div className="kanban-form-label">Column</div>
               <div className="kanban-status-chips">
@@ -221,7 +261,7 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
             .sort((a, b) => {
               if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
               if (a.dueDate) return -1;
-              if (b.dueDate) return 1;
+              if (b.dueDate) return  1;
               return a.createdAt - b.createdAt;
             });
           const statusIdx = STATUS_ORDER.indexOf(col.id);
@@ -244,7 +284,7 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
 
                   return (
                     <div key={task.id} className="kanban-card">
-                      {/* Top row: category badge + due date */}
+                      {/* Category badge + due date */}
                       <div className="kanban-card-top">
                         <span className="cat-badge" style={{ background: c.bg, color: c.text }}>
                           {task.category}
@@ -256,7 +296,7 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
                         )}
                       </div>
 
-                      {/* Title — click to edit inline */}
+                      {/* Title — click to edit */}
                       {editId === task.id ? (
                         <input
                           autoFocus type="text" value={editTitle}
@@ -269,13 +309,13 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
                         <div
                           className="kanban-card-title"
                           onClick={() => { setEditId(task.id); setEditTitle(task.title); }}
-                          title="Click to edit title"
+                          title="Click to edit"
                         >
                           {task.title}
                         </div>
                       )}
 
-                      {/* Actions: move left/right + delete */}
+                      {/* Move + delete */}
                       <div className="kanban-card-actions">
                         {statusIdx > 0 && (
                           <button onClick={() => moveTask(task.id, 'back')} className="kanban-move-btn">

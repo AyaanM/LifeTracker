@@ -9,7 +9,7 @@ import Kanban from './components/Kanban';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
-  const [activeSection, setActiveSection] = useState<NavSection>('dashboard');
+  const [activeSection, setActiveSection] = useState<NavSection>('kanban');
   const [syncCode] = useLocalStorage<string>('tbf-sync-code', generateSyncCode());
 
   const {

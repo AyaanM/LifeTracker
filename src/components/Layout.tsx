@@ -10,9 +10,9 @@ interface Props {
 }
 
 const NAV_ITEMS: { id: NavSection; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: 'Dashboard',     icon: LayoutDashboard },
-  { id: 'budget',    label: 'Monthly Budget', icon: BookOpen },
   { id: 'kanban',    label: 'Tasks',          icon: KanbanSquare },
+  { id: 'dashboard', label: 'Dashboard',      icon: LayoutDashboard },
+  { id: 'budget',    label: 'Monthly Budget', icon: BookOpen },
 ];
 
 export default function Layout({ activeSection, onNavigate, children }: Props) {

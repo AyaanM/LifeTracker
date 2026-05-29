@@ -1720,6 +1720,47 @@ body {
 }
 .kanban-date-input:focus { border-color: var(--primary); }
 
+/* Category manage mode */
+.kanban-form-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.kanban-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 7px;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.kanban-manage-btn:hover { border-color: var(--primary); color: var(--primary); }
+.kanban-manage-btn--active { border-color: var(--red); color: var(--red); }
+
+.kanban-cat-delete-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #FEE2E2 !important;
+  color: #991B1B !important;
+  border-color: #FCA5A5 !important;
+  cursor: pointer;
+}
+.kanban-cat-delete-chip:hover { background: #FECACA !important; border-color: #EF4444 !important; }
+
+.kanban-manage-hint {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
 /* Inline card title editor */
 .kanban-title-edit-input {
   width: 100%;
