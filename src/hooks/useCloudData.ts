@@ -154,6 +154,17 @@ export function useCloudData(syncCode: string) {
           kanbanTasks: ktasks, kanbanCategories: kcats,
           version: DATA_VERSION, updatedAt: data.updatedAt ?? 0,
         };
+      } else {
+        // First visit for this sync code — write defaults immediately so
+        // the Firestore collection and document are created right away.
+        try {
+          await setDoc(doc(db, COLLECTION, syncCode), {
+            ...latestRef.current,
+            updatedAt: Date.now(),
+          });
+        } catch (writeErr) {
+          console.error('Initial cloud write failed:', writeErr);
+        }
       }
     } catch (e) {
       console.error('Cloud load failed:', e);

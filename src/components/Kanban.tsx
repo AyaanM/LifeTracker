@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { KanbanTask } from '../types';
-import { Plus, Trash2, ChevronLeft, ChevronRight, X, Check, Pencil } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, X, Check, Pencil, CalendarDays, ArrowUpDown, Tag } from 'lucide-react';
 
 type Status = KanbanTask['status'];
 
@@ -61,6 +61,11 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
   // Inline card title editing
   const [editId,       setEditId]       = useState<string | null>(null);
   const [editTitle,    setEditTitle]    = useState('');
+  // Inline card due-date editing
+  const [editDueId,    setEditDueId]    = useState<string | null>(null);
+  const [editDueVal,   setEditDueVal]   = useState('');
+  // Sort mode
+  const [sortMode,     setSortMode]     = useState<'due' | 'category'>('due');
   // Clear-done confirmation
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -102,6 +107,11 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
     setEditId(null);
   }
 
+  function saveDue(id: string) {
+    setTasks(p => p.map(t => t.id === id ? { ...t, dueDate: editDueVal } : t));
+    setEditDueId(null);
+  }
+
   function createCategory() {
     const name = newCatName.trim();
     if (!name || categories.includes(name)) { setCreatingCat(false); setNewCatName(''); return; }
@@ -141,6 +151,13 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
           ) : (
             <button onClick={() => setConfirmClear(true)} className="btn btn-ghost btn-sm">Clear Done</button>
           )}
+          <button
+            onClick={() => setSortMode(m => m === 'due' ? 'category' : 'due')}
+            className={`btn btn-ghost btn-sm kanban-sort-btn ${sortMode === 'category' ? 'kanban-sort-btn--active' : ''}`}
+            title={sortMode === 'due' ? 'Sort by date (click for category)' : 'Sort by category (click for date)'}
+          >
+            {sortMode === 'due' ? <><ArrowUpDown size={13} /> Date</> : <><Tag size={13} /> Category</>}
+          </button>
           {!adding && (
             <button onClick={openAdd} className="btn btn-primary btn-sm">
               <Plus size={14} /> Add Task
@@ -259,6 +276,11 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
           const colTasks = tasks
             .filter(t => t.status === col.id)
             .sort((a, b) => {
+              if (sortMode === 'category') {
+                const catCmp = a.category.localeCompare(b.category);
+                if (catCmp !== 0) return catCmp;
+              }
+              // within same category (or primary sort when mode === 'due'): sort by due date
               if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
               if (a.dueDate) return -1;
               if (b.dueDate) return  1;
@@ -289,10 +311,35 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
                         <span className="cat-badge" style={{ background: c.bg, color: c.text }}>
                           {task.category}
                         </span>
-                        {due && (
-                          <span className={`kanban-card-due ${due.overdue ? 'kanban-card-due--overdue' : ''}`}>
+                        {editDueId === task.id ? (
+                          <input
+                            autoFocus
+                            type="date"
+                            value={editDueVal}
+                            onChange={e => setEditDueVal(e.target.value)}
+                            onBlur={() => saveDue(task.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter')  saveDue(task.id);
+                              if (e.key === 'Escape') setEditDueId(null);
+                            }}
+                            className="kanban-due-edit-input"
+                          />
+                        ) : due ? (
+                          <span
+                            className={`kanban-card-due kanban-card-due--clickable ${due.overdue ? 'kanban-card-due--overdue' : ''}`}
+                            onClick={() => { setEditDueId(task.id); setEditDueVal(task.dueDate); }}
+                            title="Click to change due date"
+                          >
                             {due.label}
                           </span>
+                        ) : (
+                          <button
+                            className="kanban-add-due-btn"
+                            onClick={() => { setEditDueId(task.id); setEditDueVal(''); }}
+                            title="Add due date"
+                          >
+                            <CalendarDays size={11} /> date
+                          </button>
                         )}
                       </div>
 

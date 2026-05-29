@@ -32,7 +32,7 @@ export default function App() {
   }
 
   return (
-    <Layout activeSection={activeSection} onNavigate={setActiveSection}>
+    <Layout activeSection={activeSection} onNavigate={setActiveSection} syncStatus={syncStatus}>
       {activeSection === 'fin_dashboard' && (
         <Fin_Dashboard
           accounts={accounts} setAccounts={setAccounts}

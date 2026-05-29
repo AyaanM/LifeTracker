@@ -137,7 +137,16 @@ body {
 }
 
 .topbar-brand { display: none; }
-.topbar-right { margin-left: auto; font-size: 0.75rem; color: var(--text-3); letter-spacing: 1px; }
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-3);
+  letter-spacing: 1px;
+}
+.topbar-tagline { white-space: nowrap; }
 
 .mobile-menu-btn {
   display: none;
@@ -1773,3 +1782,39 @@ body {
   color: var(--text);
   outline: none;
 }
+
+/* Inline card due-date editor */
+.kanban-due-edit-input {
+  border: 1px solid var(--primary);
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 0.7rem;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  max-width: 130px;
+}
+
+/* "date" button shown when no due date set */
+.kanban-add-due-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 0.68rem;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.kanban-add-due-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Clickable due-date label on cards */
+.kanban-card-due--clickable { cursor: pointer; border-radius: 4px; padding: 1px 3px; }
+.kanban-card-due--clickable:hover { background: #F0E8DC; color: var(--primary); }
+
+/* Sort toggle button */
+.kanban-sort-btn { display: inline-flex; align-items: center; gap: 0.3rem; }
+.kanban-sort-btn--active { background: #F0E8DC; border-color: var(--primary); color: var(--primary); }
