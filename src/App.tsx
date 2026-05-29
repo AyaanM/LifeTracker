@@ -3,7 +3,7 @@ import type { NavSection } from './types';
 import { useCloudData, generateSyncCode } from './hooks/useCloudData';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
+import Fin_Dashboard from './components/Fin_Dashboard';
 import MonthlyBudget from './components/MonthlyBudget';
 import Kanban from './components/Kanban';
 import { Loader2 } from 'lucide-react';
@@ -33,8 +33,8 @@ export default function App() {
 
   return (
     <Layout activeSection={activeSection} onNavigate={setActiveSection}>
-      {activeSection === 'dashboard' && (
-        <Dashboard
+      {activeSection === 'fin_dashboard' && (
+        <Fin_Dashboard
           accounts={accounts} setAccounts={setAccounts}
           savingsGoals={savingsGoals} setSavingsGoals={setSavingsGoals}
           monthlyData={monthlyData} syncStatus={syncStatus} onRefresh={refresh}

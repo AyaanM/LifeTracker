@@ -17,7 +17,7 @@ interface Props {
 
 const CURRENT = new Date().getMonth();
 
-export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData, syncStatus, onRefresh }: Props) {
+export default function Fin_Dashboard({ accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData, syncStatus, onRefresh }: Props) {
   // Account editing
   const [editAccId, setEditAccId]   = useState<string | null>(null);
   const [editAccVal, setEditAccVal] = useState('');
@@ -78,7 +78,7 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
   return (
     <div className="section">
       <div className="section-header">
-        <div><h1 className="section-title">Dashboard</h1></div>
+        <div><h1 className="section-title">Finance Dashboard</h1></div>
       </div>
 
       {/* ── THIS MONTH hero ── */}
@@ -86,7 +86,7 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
         <div className="hero-month-title">{monthName}</div>
         <div className="hero-tiles">
           <div className="hero-tile hero-tile--income">
-            <div className="hero-tile-label">Income</div>
+            <div className="hero-tile-label">Income (Net)</div>
             <div className="hero-tile-value">{formatCAD(totalInc)}</div>
           </div>
           <div className="hero-tile hero-tile--dasond">
@@ -112,7 +112,7 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
       {/* ── ANNUAL strip ── */}
       <div className="annual-strip">
         <div className="annual-strip-item">
-          <span className="annual-strip-label">Annual Income</span>
+          <span className="annual-strip-label">Income This Year</span>
           <span className="annual-strip-value">{formatCAD(annualInc)}</span>
         </div>
         <div className="annual-strip-divider" />
@@ -122,7 +122,7 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
         </div>
         <div className="annual-strip-divider" />
         <div className="annual-strip-item">
-          <span className="annual-strip-label">Net This Year</span>
+          <span className="annual-strip-label">Surplus This Year</span>
           <span className={`annual-strip-value ${annualInc - annualExp >= 0 ? 'pos' : 'neg'}`}>{formatCAD(annualInc - annualExp)}</span>
         </div>
       </div>
@@ -244,22 +244,6 @@ export default function Dashboard({ accounts, setAccounts, savingsGoals, setSavi
             <button onClick={addAccount} className="btn btn-primary btn-sm">Add</button>
             <button onClick={() => setAddingAcc(false)} className="btn btn-ghost btn-sm">Cancel</button>
           </div>
-        )}
-      </div>
-
-      {/* ── DATA & SYNC ── */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Data &amp; Sync</h2>
-          <span className={`sync-status-badge sync-status-badge--${syncStatus}`}>
-            {syncStatus === 'saving' ? 'Saving…' : syncStatus === 'error' ? 'Sync Error' : syncStatus === 'loading' ? 'Loading…' : 'Synced'}
-          </span>
-        </div>
-        <div className="sync-actions">
-          <button onClick={onRefresh} className="btn btn-ghost"><RefreshCw size={16} /><span>Refresh</span></button>
-        </div>
-        {syncStatus === 'error' && (
-          <p className="sync-error">Could not reach the cloud. Check your internet connection, or verify your Firebase Firestore rules allow reads and writes.</p>
         )}
       </div>
     </div>

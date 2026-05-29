@@ -10,8 +10,8 @@ interface Props {
 }
 
 const NAV_ITEMS: { id: NavSection; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'kanban',    label: 'Tasks',          icon: KanbanSquare },
-  { id: 'dashboard', label: 'Dashboard',      icon: LayoutDashboard },
+  { id: 'kanban',    label: 'Tasks', icon: KanbanSquare },
+  { id: 'fin_dashboard', label: 'Finance Dashboard', icon: LayoutDashboard },
   { id: 'budget',    label: 'Monthly Budget', icon: BookOpen },
 ];
 
@@ -53,7 +53,7 @@ export default function Layout({ activeSection, onNavigate, children }: Props) {
         </nav>
 
         <div className="sidebar-footer">
-          <span>Lock In</span>
+          <span>Sign Out</span>
         </div>
       </aside>
 
@@ -65,7 +65,7 @@ export default function Layout({ activeSection, onNavigate, children }: Props) {
             <Menu size={22} />
           </button>
           <div className="topbar-right">
-            <span className="topbar-tagline">"Empires aren't built in a day" - Marcus Aurelius</span>
+            <span className="topbar-tagline">Be Patient, Empires aren't built in a day</span>
           </div>
         </header>
         <main className="main-content">

@@ -16,7 +16,7 @@ interface CloudPayload {
   updatedAt: number;
 }
 
-const COLLECTION     = 'blueprintUsers';
+const COLLECTION     = 'LifeTrackerUsers';
 const SAVE_DEBOUNCE  = 300; // ms — short enough to feel instant
 
 export type SyncStatus = 'loading' | 'idle' | 'saving' | 'error';

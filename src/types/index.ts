@@ -35,4 +35,4 @@ export interface KanbanTask {
   createdAt: number;
 }
 
-export type NavSection = 'dashboard' | 'budget' | 'kanban';
+export type NavSection = 'fin_dashboard' | 'budget' | 'kanban';

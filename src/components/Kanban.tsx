@@ -221,7 +221,7 @@ export default function Kanban({ tasks, setTasks, categories, setCategories }: P
                 )}
               </div>
               {managingCats && (
-                <p className="kanban-manage-hint">Click a category to delete it. Tasks in that category will be moved to the next one.</p>
+                <p className="kanban-manage-hint">Tasks in deleated category will be moved to the next one.</p>
               )}
             </div>
 
