@@ -19,7 +19,6 @@ export default function App() {
     monthlyData, setMonthlyData,
     kanbanTasks, setKanbanTasks,
     kanbanCategories, setKanbanCategories,
-    refresh,
   } = useCloudData(syncCode);
 
   if (syncStatus === 'loading') {
@@ -37,7 +36,7 @@ export default function App() {
         <Fin_Dashboard
           accounts={accounts} setAccounts={setAccounts}
           savingsGoals={savingsGoals} setSavingsGoals={setSavingsGoals}
-          monthlyData={monthlyData} syncStatus={syncStatus} onRefresh={refresh}
+          monthlyData={monthlyData}
         />
       )}
       {activeSection === 'budget' && (

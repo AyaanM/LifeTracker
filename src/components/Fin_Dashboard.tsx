@@ -2,8 +2,7 @@ import { useState } from 'react';
 import type { Account, SavingsGoal, MonthData } from '../types';
 import { MONTHS } from '../constants/data';
 import { formatCAD } from '../utils/formatters';
-import { Pencil, Check, X, RefreshCw, Plus, Trash2 } from 'lucide-react';
-import type { SyncStatus } from '../hooks/useCloudData';
+import { Pencil, Check, X, Plus, Trash2 } from 'lucide-react';
 
 interface Props {
   accounts: Account[];
@@ -11,13 +10,11 @@ interface Props {
   savingsGoals: SavingsGoal[];
   setSavingsGoals: (v: SavingsGoal[] | ((p: SavingsGoal[]) => SavingsGoal[])) => void;
   monthlyData: MonthData[];
-  syncStatus: SyncStatus;
-  onRefresh: () => void;
 }
 
 const CURRENT = new Date().getMonth();
 
-export default function Fin_Dashboard({ accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData, syncStatus, onRefresh }: Props) {
+export default function Fin_Dashboard({ accounts, setAccounts, savingsGoals, setSavingsGoals, monthlyData }: Props) {
   // Account editing
   const [editAccId, setEditAccId]   = useState<string | null>(null);
   const [editAccVal, setEditAccVal] = useState('');
