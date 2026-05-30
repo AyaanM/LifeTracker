@@ -154,9 +154,11 @@ export function useCloudData(syncCode: string) {
           kanbanTasks: ktasks, kanbanCategories: kcats,
           version: DATA_VERSION, updatedAt: data.updatedAt ?? 0,
         };
-      } else {
-        // First visit for this sync code — write defaults immediately so
-        // the Firestore collection and document are created right away.
+      } else if (snap) {
+        // snap is a real DocumentSnapshot with no data (new user) — write
+        // defaults so Firestore creates the collection/document immediately.
+        // We only do this when the read definitively returned "no document";
+        // if snap is null the read timed out and we must NOT overwrite.
         try {
           await setDoc(doc(db, COLLECTION, syncCode), {
             ...latestRef.current,

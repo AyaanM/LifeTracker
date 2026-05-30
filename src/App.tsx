@@ -1,53 +1,25 @@
 import { useState } from 'react';
-import type { NavSection } from './types';
-import { useCloudData, generateSyncCode } from './hooks/useCloudData';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import Layout from './components/Layout';
-import Fin_Dashboard from './components/Fin_Dashboard';
-import MonthlyBudget from './components/MonthlyBudget';
-import Kanban from './components/Kanban';
-import { Loader2 } from 'lucide-react';
+import type { UserProfile } from './hooks/useProfiles';
+import { getSessionProfile, setSessionProfile, clearSessionProfile } from './hooks/useProfiles';
+import ProfileScreen from './components/ProfileScreen';
+import MainApp from './components/MainApp';
 
 export default function App() {
-  const [activeSection, setActiveSection] = useState<NavSection>('kanban');
-  const [syncCode] = useLocalStorage<string>('tbf-sync-code', generateSyncCode());
+  const [activeProfile, setActiveProfile] = useState<UserProfile | null>(getSessionProfile);
 
-  const {
-    syncStatus,
-    accounts, setAccounts,
-    savingsGoals, setSavingsGoals,
-    monthlyData, setMonthlyData,
-    kanbanTasks, setKanbanTasks,
-    kanbanCategories, setKanbanCategories,
-  } = useCloudData(syncCode);
-
-  if (syncStatus === 'loading') {
-    return (
-      <div className="cloud-loading">
-        <Loader2 size={32} className="spin" />
-        <p>Loading…</p>
-      </div>
-    );
+  function handleUnlock(profile: UserProfile) {
+    setSessionProfile(profile.id);
+    setActiveProfile(profile);
   }
 
-  return (
-    <Layout activeSection={activeSection} onNavigate={setActiveSection} syncStatus={syncStatus}>
-      {activeSection === 'fin_dashboard' && (
-        <Fin_Dashboard
-          accounts={accounts} setAccounts={setAccounts}
-          savingsGoals={savingsGoals} setSavingsGoals={setSavingsGoals}
-          monthlyData={monthlyData}
-        />
-      )}
-      {activeSection === 'budget' && (
-        <MonthlyBudget monthlyData={monthlyData} setMonthlyData={setMonthlyData} />
-      )}
-      {activeSection === 'kanban' && (
-        <Kanban
-          tasks={kanbanTasks} setTasks={setKanbanTasks}
-          categories={kanbanCategories} setCategories={setKanbanCategories}
-        />
-      )}
-    </Layout>
-  );
+  function handleSignOut() {
+    clearSessionProfile();
+    setActiveProfile(null);
+  }
+
+  if (!activeProfile) {
+    return <ProfileScreen onUnlock={handleUnlock} />;
+  }
+
+  return <MainApp profile={activeProfile} onSignOut={handleSignOut} />;
 }

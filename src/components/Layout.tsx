@@ -2,12 +2,14 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { NavSection } from '../types';
 import type { SyncStatus } from '../hooks/useCloudData';
-import { LayoutDashboard, BookOpen, KanbanSquare, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BookOpen, KanbanSquare, Menu, X, User } from 'lucide-react';
 
 interface Props {
   activeSection: NavSection;
   onNavigate: (s: NavSection) => void;
   syncStatus: SyncStatus;
+  profileName: string;
+  onSignOut: () => void;
   children: ReactNode;
 }
 
@@ -24,7 +26,7 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
   loading: 'Loading…',
 };
 
-export default function Layout({ activeSection, onNavigate, syncStatus, children }: Props) {
+export default function Layout({ activeSection, onNavigate, syncStatus, profileName, onSignOut, children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleNav(id: NavSection) {
@@ -62,7 +64,11 @@ export default function Layout({ activeSection, onNavigate, syncStatus, children
         </nav>
 
         <div className="sidebar-footer">
-          <span>Sign Out</span>
+          <div className="sidebar-profile">
+            <div className="sidebar-profile-avatar"><User size={13} /></div>
+            <span className="sidebar-profile-name">{profileName}</span>
+          </div>
+          <button className="sidebar-signout-btn" onClick={onSignOut}>Sign Out</button>
         </div>
       </aside>
 
